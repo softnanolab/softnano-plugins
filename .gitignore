@@ -1,0 +1,10 @@
+# Core dumps
+core
+
+# OS
+.DS_Store
+
+# Editor
+*.swp
+*.swo
+*~
