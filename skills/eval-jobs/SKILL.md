@@ -175,5 +175,5 @@ If you are unsure which scheduler is available, run:
 ```bash
 command -v sbatch && echo "SLURM" || (command -v qsub && echo "PBS" || echo "UNKNOWN")
 ```
-- **SLURM detected:** Follow the SLURM paths in Steps 4–5. See `.claude/slurm.md` for full SLURM reference.
-- **PBS Pro detected:** Follow the PBS Pro paths in Steps 4–5. See `.claude/cx3.md` for full PBS Pro reference.
+- **SLURM detected:** Follow the SLURM paths in Steps 4–5. See `docs/slurm.md` in this plugin for full SLURM reference.
+- **PBS Pro detected:** Follow the PBS Pro paths in Steps 4–5. See `docs/cx3.md` in this plugin for full PBS Pro reference.
