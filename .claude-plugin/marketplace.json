@@ -1,0 +1,13 @@
+{
+  "name": "softnanolab-plugins",
+  "owner": {
+    "name": "SoftNano Lab"
+  },
+  "plugins": [
+    {
+      "name": "softnano",
+      "source": "./",
+      "description": "Shared Claude Code skills for the SoftNano lab"
+    }
+  ]
+}
