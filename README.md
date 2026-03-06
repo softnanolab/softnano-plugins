@@ -56,12 +56,35 @@ Monitor SLURM/PBS jobs and their logs. Automatically detects running/pending job
 
 If no job ID is given, it finds and monitors the user's active jobs.
 
+### `/softnano:code-review`
+
+Review Python code against SoftNano style conventions. Checks docstrings, type annotations, tensor shape documentation, and commented-out code.
+
+```
+/softnano:code-review [file-or-directory]
+```
+
+**What it does:**
+1. Loads the style guide from `docs/code_style.md`
+2. Identifies files to review (from argument, recent git diff, or staged files)
+3. Runs `ruff` lint/format checks if available
+4. Manual checks against SoftNano conventions:
+   - Google-style docstrings with `Args:`, `Returns:`
+   - Tensor shape documentation (`Expected Shape:`)
+   - Python 3.12+ type annotations (`x | None`, `list[int]`)
+   - Commented-out code has `# TODO: review` + `# ----` markers
+5. Reports findings by category and severity
+6. Offers to apply style-only fixes (no logic changes)
+
+If no file is given, it reviews staged or recently changed Python files.
+
 ## Reference Docs
 
 | File | Description |
 |------|-------------|
 | `docs/slurm.md` | SLURM reference for Isambard (job templates, commands, key patterns) |
 | `docs/cx3.md` | PBS Pro reference for Imperial CX3 (queues, job templates, commands) |
+| `docs/code_style.md` | Python code style guide (docstrings, type annotations, tensor shapes) |
 
 These are referenced by the skills for scheduler-specific details.
 
@@ -73,11 +96,14 @@ softnano-plugins/
 │   ├── plugin.json          # Plugin manifest
 │   └── marketplace.json     # Marketplace manifest
 ├── skills/
-│   └── monitor-jobs/
+│   ├── monitor-jobs/
+│   │   └── SKILL.md
+│   └── code-review/
 │       └── SKILL.md
 ├── docs/
 │   ├── slurm.md             # Isambard SLURM reference
-│   └── cx3.md               # Imperial PBS Pro reference
+│   ├── cx3.md               # Imperial PBS Pro reference
+│   └── code_style.md        # Python code style guide
 └── .gitignore
 ```
 
