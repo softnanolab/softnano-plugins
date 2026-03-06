@@ -38,27 +38,6 @@ claude --plugin-dir /path/to/softnano-plugins
 
 ## Skills
 
-### `/softnano:eval-jobs`
-
-Submit and monitor SLURM/PBS evaluation jobs for W&B runs, then display interchain metric tables.
-
-```
-/softnano:eval-jobs <wandb_run_url(s) or project_url>
-```
-
-**What it does:**
-1. Resolves the invoking project's root directory (via `.env` location)
-2. Loads `LOGS_DIR`, `JOBS_DIR`, `WANDB_ENTITY` from `.env`
-3. Checks for cached results before submitting
-4. Generates and submits batch scripts (SLURM or PBS Pro, auto-detected)
-5. Monitors jobs until completion
-6. Parses `results.json` and displays inter-chain P@K, median P@K, and AUC tables
-
-**Requirements in each project:**
-- `.env` with `LOGS_DIR`, `JOBS_DIR`, `WANDB_ENTITY`
-- `scripts/evals/evaluate_from_wandb.py`
-- `.venv` with dependencies installed
-
 ### `/softnano:monitor-jobs`
 
 Monitor SLURM/PBS jobs and their logs. Automatically detects running/pending jobs, tails logs, and reports errors.
@@ -94,8 +73,6 @@ softnano-plugins/
 │   ├── plugin.json          # Plugin manifest
 │   └── marketplace.json     # Marketplace manifest
 ├── skills/
-│   ├── eval-jobs/
-│   │   └── SKILL.md
 │   └── monitor-jobs/
 │       └── SKILL.md
 ├── docs/
