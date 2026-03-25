@@ -56,6 +56,21 @@ Monitor SLURM/PBS jobs and their logs. Automatically detects running/pending job
 
 If no job ID is given, it finds and monitors the user's active jobs.
 
+### `/softnano:codex`
+
+Get a second opinion from OpenAI Codex CLI (GPT-5.4). Cross-check reasoning, validate plans, or get an independent code review.
+
+```
+/softnano:codex <task or question>
+```
+
+**What it does:**
+1. Reads relevant files to build context
+2. Constructs an unbiased prompt (no leading conclusions)
+3. Runs Codex in read-only mode via `codex exec --full-auto`
+4. Reports the Codex response and notes agreements/disagreements
+5. Lets you decide how to proceed
+
 ### `/softnano:code-review`
 
 Review Python code against SoftNano style conventions. Checks docstrings, type annotations, tensor shape documentation, and commented-out code.
@@ -96,6 +111,8 @@ softnano-plugins/
 │   ├── plugin.json          # Plugin manifest
 │   └── marketplace.json     # Marketplace manifest
 ├── skills/
+│   ├── codex/
+│   │   └── SKILL.md
 │   ├── monitor-jobs/
 │   │   └── SKILL.md
 │   └── code-review/
