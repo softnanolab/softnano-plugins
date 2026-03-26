@@ -93,6 +93,23 @@ Review Python code against SoftNano style conventions. Checks docstrings, type a
 
 If no file is given, it reviews staged or recently changed Python files.
 
+### `/softnano:edison-research`
+
+Conduct scientific literature research using Edison's autonomous search API. Edison searches hundreds of papers with full-text analysis and returns a cited answer.
+
+```
+/softnano:edison-research <research question>
+```
+
+**What it does:**
+1. Submits the research question to Edison's literature search API
+2. Waits for the result (typically 1–5 minutes)
+3. Reports the cited answer verbatim
+
+Supports follow-up queries via `--continue-from <task_id>` to build on previous searches.
+
+**Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
+
 ## Reference Docs
 
 | File | Description |
@@ -115,8 +132,12 @@ softnano-plugins/
 │   │   └── SKILL.md
 │   ├── monitor-jobs/
 │   │   └── SKILL.md
-│   └── code-review/
-│       └── SKILL.md
+│   ├── code-review/
+│   │   └── SKILL.md
+│   └── edison-research/
+│       ├── SKILL.md
+│       └── scripts/
+│           └── edison_query.sh
 ├── docs/
 │   ├── slurm.md             # Isambard SLURM reference
 │   ├── cx3.md               # Imperial PBS Pro reference
