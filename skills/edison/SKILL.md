@@ -1,5 +1,5 @@
 ---
-name: edison-research
+name: edison
 description: Conduct scientific research using Edison's autonomous literature search API. Use when the user asks to research a scientific question, find papers, or review literature on a topic. Edison searches hundreds of papers and returns a cited answer.
 argument-hint: <research question>
 user-invocable: true
@@ -52,6 +52,8 @@ The script authenticates, submits the query, and polls every 15s until Edison re
 ```
 
 If the script outputs an `error` field, report the error to the user and stop.
+
+**API key not set:** If the error indicates `EDISON_PLATFORM_API_KEY not set`, immediately ask the user to provide their Edison API key. Tell them they can get one from [platform.edisonscientific.com/profile](https://platform.edisonscientific.com/profile) and set it in `~/.claude/settings.json` under `"env"`. Do NOT proceed with any other action — wait for the user to provide the key.
 
 ### Running multiple queries
 

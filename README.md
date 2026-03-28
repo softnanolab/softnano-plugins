@@ -93,12 +93,12 @@ Review Python code against SoftNano style conventions. Checks docstrings, type a
 
 If no file is given, it reviews staged or recently changed Python files.
 
-### `/softnano:edison-research`
+### `/softnano:edison`
 
 Conduct scientific literature research using Edison's autonomous search API. Edison searches hundreds of papers with full-text analysis and returns a cited answer.
 
 ```
-/softnano:edison-research <research question>
+/softnano:edison <research question>
 ```
 
 **What it does:**
@@ -134,7 +134,7 @@ softnano-plugins/
 │   │   └── SKILL.md
 │   ├── code-review/
 │   │   └── SKILL.md
-│   └── edison-research/
+│   └── edison/
 │       ├── SKILL.md
 │       └── scripts/
 │           └── edison_query.sh

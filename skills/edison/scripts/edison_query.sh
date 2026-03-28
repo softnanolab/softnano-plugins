@@ -42,7 +42,8 @@ done
 # --- Check prerequisites ---
 
 if [[ -z "${EDISON_PLATFORM_API_KEY:-}" ]]; then
-    die "EDISON_PLATFORM_API_KEY not set. Add it to ~/.claude/settings.json under env."
+    echo '{"error": "EDISON_PLATFORM_API_KEY not set. Add it to ~/.claude/settings.json under env."}'
+    exit 0
 fi
 
 if ! command -v jq &>/dev/null; then
