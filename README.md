@@ -125,6 +125,22 @@ Supports follow-up queries via `--continue-from <task_id>` to build on previous 
 
 **Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
 
+### `/softnano:notion-upload`
+
+Upload local image files to a Notion page. Uses the Notion File Upload REST API to embed PNGs, JPGs, and other images directly into a page.
+
+```
+/softnano:notion-upload <notion_page_url_or_id> <file_path(s) or glob pattern>
+```
+
+**What it does:**
+1. Resolves file paths (supports glob patterns like `figures/*.png`)
+2. Uploads each image via the Notion File Upload API (3-step process)
+3. Appends all images as blocks to the Notion page with auto-generated captions
+4. Reports upload results and any failures
+
+**Prerequisites:** `NOTION_API_TOKEN` in your project `.env` file or as an environment variable. Create an integration at https://www.notion.so/profile/integrations and share the target page with it.
+
 ## Project Structure
 
 ```
@@ -145,7 +161,9 @@ softnano-plugins/
 │   │   ├── SKILL.md
 │   │   └── scripts/
 │   │       └── edison_query.sh
-│   └── monitor-jobs/
+│   ├── monitor-jobs/
+│   │   └── SKILL.md
+│   └── notion-upload/
 │       └── SKILL.md
 └── .gitignore
 ```
