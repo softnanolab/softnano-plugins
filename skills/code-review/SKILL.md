@@ -11,7 +11,7 @@ You are reviewing Python code against the SoftNano code style guide. Follow this
 
 ## Step 1: Load the style guide
 
-Read `docs/code_style.md` from this plugin's directory to get the authoritative style rules. The key conventions are:
+The authoritative style rules are defined below. The key conventions are:
 
 - **Docstrings**: Google-style with `Args:`, `Returns:`, multi-line description
 - **Tensor shapes**: `Expected Shape:` sub-lines in `Args:`
@@ -102,7 +102,7 @@ After reporting, offer to apply **style-only** fixes:
 
 ## Important notes
 
-- When in doubt about a convention, defer to `docs/code_style.md` in this plugin.
+- When in doubt about a convention, defer to the style rules in Step 1 above.
 - Do not flag test files for missing docstrings on test functions (functions starting with `test_`).
 - Private functions (starting with `_`) should still have type annotations but docstrings are optional.
 - Be pragmatic: focus on actionable findings, not nitpicks.

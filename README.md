@@ -56,6 +56,22 @@ Monitor SLURM/PBS jobs and their logs. Automatically detects running/pending job
 
 If no job ID is given, it finds and monitors the user's active jobs.
 
+### `/softnano:cluster-instructions`
+
+Detect which HPC cluster you are on and load the correct job submission instructions. Covers CX3 (PBS Pro) and Isambard (SLURM).
+
+```
+/softnano:cluster-instructions [command-to-run]
+```
+
+**What it does:**
+1. Detects the cluster from `pwd` and available scheduler commands
+2. Checks if you are on a login node or compute node
+3. Loads cluster-specific instructions (queues, templates, storage paths)
+4. Submits the command via the correct scheduler, or reports the detected environment
+
+Includes full reference docs for CX3 (PBS Pro) and Isambard (SLURM) with job templates, queue tables, and common commands.
+
 ### `/softnano:codex`
 
 Get a second opinion from OpenAI Codex CLI (GPT-5.4). Cross-check reasoning, validate plans, or get an independent code review.
@@ -80,16 +96,15 @@ Review Python code against SoftNano style conventions. Checks docstrings, type a
 ```
 
 **What it does:**
-1. Loads the style guide from `docs/code_style.md`
-2. Identifies files to review (from argument, recent git diff, or staged files)
-3. Runs `ruff` lint/format checks if available
-4. Manual checks against SoftNano conventions:
+1. Identifies files to review (from argument, recent git diff, or staged files)
+2. Runs `ruff` lint/format checks if available
+3. Manual checks against SoftNano conventions:
    - Google-style docstrings with `Args:`, `Returns:`
    - Tensor shape documentation (`Expected Shape:`)
    - Python 3.12+ type annotations (`x | None`, `list[int]`)
    - Commented-out code has `# TODO: review` + `# ----` markers
-5. Reports findings by category and severity
-6. Offers to apply style-only fixes (no logic changes)
+4. Reports findings by category and severity
+5. Offers to apply style-only fixes (no logic changes)
 
 If no file is given, it reviews staged or recently changed Python files.
 
@@ -110,16 +125,6 @@ Supports follow-up queries via `--continue-from <task_id>` to build on previous 
 
 **Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
 
-## Reference Docs
-
-| File | Description |
-|------|-------------|
-| `docs/slurm.md` | SLURM reference for Isambard (job templates, commands, key patterns) |
-| `docs/cx3.md` | PBS Pro reference for Imperial CX3 (queues, job templates, commands) |
-| `docs/code_style.md` | Python code style guide (docstrings, type annotations, tensor shapes) |
-
-These are referenced by the skills for scheduler-specific details.
-
 ## Project Structure
 
 ```
@@ -128,20 +133,20 @@ softnano-plugins/
 │   ├── plugin.json          # Plugin manifest
 │   └── marketplace.json     # Marketplace manifest
 ├── skills/
-│   ├── codex/
-│   │   └── SKILL.md
-│   ├── monitor-jobs/
-│   │   └── SKILL.md
+│   ├── cluster-instructions/
+│   │   ├── SKILL.md         # HPC detection & job submission
+│   │   ├── cx3.md           # Imperial PBS Pro reference
+│   │   └── isambard.md      # Isambard SLURM reference
 │   ├── code-review/
 │   │   └── SKILL.md
-│   └── edison/
-│       ├── SKILL.md
-│       └── scripts/
-│           └── edison_query.sh
-├── docs/
-│   ├── slurm.md             # Isambard SLURM reference
-│   ├── cx3.md               # Imperial PBS Pro reference
-│   └── code_style.md        # Python code style guide
+│   ├── codex/
+│   │   └── SKILL.md
+│   ├── edison/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       └── edison_query.sh
+│   └── monitor-jobs/
+│       └── SKILL.md
 └── .gitignore
 ```
 

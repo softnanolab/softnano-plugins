@@ -113,3 +113,4 @@ qsub -I -q v1_gpu72 -l select=1:ncpus=4:mem=32gb:ngpus=1 -l walltime=01:00:00
 ## Other details about CX3
 - The `home/` directory (`/rds/general/user/<user>/home`) contains 1TB of storage and should be used to house the code, logs, and outputs.
 - The `ephemeral/` directory (`/rds/general/user/<user>/ephemeral`) contains 10TB of storage (that is deleted every 30 days) and should be used for large datasets. Don't worry about the deletion, we will regenerate the datasets as needed.
+- The claude instance might be run from within a login node. Once you know that you are on CX3, find the machine name and if it doesn't have the word `login` in it, then you are not on a login node and can run python commands directly.
