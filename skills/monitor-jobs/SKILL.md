@@ -6,7 +6,6 @@ allowed-tools: Bash, Read, Grep, Glob, Task
 ---
 
 # Monitor HPC Jobs
-
 You are monitoring HPC jobs on a cluster. Follow this workflow:
 
 ## Step 0: Resolve project root and environment
@@ -16,13 +15,25 @@ You are monitoring HPC jobs on a cluster. Follow this workflow:
 3. If no `.env` is found, fall back to `$PWD`
 4. Read `.env` to get `JOBS_DIR` (used for locating job scripts and logs).
 
-## Step 1: Detect the scheduler
+## Step 1: Detect the scheduler and cluster
 
 ```bash
 command -v sbatch && echo "SLURM" || (command -v qsub && echo "PBS" || echo "UNKNOWN")
 ```
 
-Follow the **SLURM** or **PBS Pro** paths below depending on the result.
+Then identify which cluster you are on:
+
+```bash
+# CX3 (Imperial) — PBS Pro
+[[ "$PWD" == /rds/general/user/* ]] && echo "CX3"
+
+# Isambard — SLURM
+[[ "$PWD" == /home/*/* ]] && ls /projects/ &>/dev/null && echo "ISAMBARD"
+```
+
+If on **CX3**, also check if you are on a login node (hostname contains `login`). If you are NOT on a login node, you can run short Python commands directly without submitting a job.
+
+Follow the **SLURM** or **PBS Pro** paths below depending on the scheduler.
 
 ## Step 2: Identify the job
 
@@ -32,9 +43,9 @@ Follow the **SLURM** or **PBS Pro** paths below depending on the result.
 - Run `squeue -u $USER --format="%.18i %.20j %.8T %.10M %.6D %.4C %.20R %o" --sort=-V` to find the user's active jobs.
 - If no jobs are running/pending, check recently completed jobs with `sacct -u $USER --starttime=$(date -d '24 hours ago' +%Y-%m-%d) --format=JobID,JobName%30,State,ExitCode,Start,End,Elapsed --noheader`.
 
-### PBS Pro
+### PBS Pro (CX3)
 - Run `qstat -u $USER` to find the user's active jobs.
-- If no jobs are running/queued, there is no built-in history command — report that no active jobs were found.
+- If no jobs are running/queued, try `qstat -f <job_id>` if a job ID was provided (may still work for recently-finished jobs). Otherwise, report that no active jobs were found — PBS Pro has no `sacct`-equivalent history command.
 
 ## Step 3: Get job details
 
@@ -42,9 +53,11 @@ Follow the **SLURM** or **PBS Pro** paths below depending on the result.
 - Run `scontrol show job <job_id>` to get full job info (WorkDir, StdOut path, submission script, state, node allocation).
 - Extract the **log file path** from the `StdOut` field. Note: `%j` in the path is replaced by the job ID.
 
-### PBS Pro
+### PBS Pro (CX3)
 - Run `qstat -f <job_id>` to get full job info (Output_Path, Error_Path, job state, resources).
-- Extract the **log file path** from the `Output_Path` field.
+- Extract **both** log paths: `Output_Path` (stdout) and `Error_Path` (stderr). PBS Pro uses separate files unlike SLURM.
+- PBS log filenames are fixed strings — there is no `%j` job ID expansion.
+- Log paths from `#PBS -o` / `#PBS -e` are relative to `PBS_O_WORKDIR` (the submission directory). Resolve them accordingly.
 
 ## Step 4: Wait for job to start (if PENDING/QUEUED)
 
@@ -65,6 +78,7 @@ This polling loop is the **default behavior** — do not ask the user whether to
 
 - Check if the log file exists yet. If not, sleep 10 seconds and retry (up to 5 times).
 - Once the log file exists, read the **last 100 lines** using `tail -n 100 <log_path>`.
+- **PBS Pro**: Check both the `.out` (stdout) and `.err` (stderr) log files. Errors often appear only in the `.err` file.
 - Look for:
   - **Errors**: Python tracebacks, `Error`, `Exception`, `FAILED`, `CANCELLED`, `OOM`, `CUDA error`, `RuntimeError`
   - **Warnings**: `UserWarning`, `FutureWarning`, deprecation notices
@@ -106,13 +120,41 @@ If the job is running and healthy, offer to keep monitoring. If the user wants c
 |------|------|
 | Job scripts | `$JOBS_DIR/<project>/` |
 | SLURM logs | `$JOBS_DIR/<project>/logs/` (or as specified by `#SBATCH --output`) |
-| PBS logs | `$JOBS_DIR/<project>/logs/` (or as specified by `#PBS -o`) |
+| PBS logs | `$JOBS_DIR/<project>/logs/` (or as specified by `#PBS -o` / `#PBS -e`) |
 | Env vars | `$PROJECT_ROOT/.env` → `JOBS_DIR` |
+
+## CX3 (PBS Pro) Reference
+
+### Queue Reference
+
+| Queue | Walltime | CPUs | Memory | GPUs | Use case |
+|-------|----------|------|--------|------|----------|
+| `v1_gpu72` | 72h | 1–64 | up to 920 GB | L40S / A100 | GPU inference/training |
+| `v1_medium24` | 24h | 1–64 | up to 450 GB | — | CPU-only, moderate memory |
+| `v1_largemem72` | 72h | 1–128 | 921–4000 GB | — | mmseqs2 / large-index jobs |
+
+> 12 GPU limit per user on `v1_gpu72`.
+
+### CX3 Storage
+
+| Path | Size | Notes |
+|------|------|-------|
+| `/rds/general/user/<user>/home` | 1 TB | Code, logs, outputs |
+| `/rds/general/user/<user>/ephemeral` | 10 TB | Large datasets (auto-deleted every 30 days) |
+
+### Key Differences from SLURM
+
+- No `srun` — run Python directly after activating the venv.
+- No `%j` job ID expansion in `#PBS -o` — use fixed log filenames.
+- Resource syntax: `select=<N>:ncpus=<C>:mem=<M>gb:ngpus=<G>` instead of `--nodes`/`--gpus`.
+- Variables via `qsub -v "KEY=val"` instead of `--export`.
+- Queue via `#PBS -q` instead of `#SBATCH --partition`.
 
 ## Important notes
 
 - **SLURM**: Always resolve `%j` in log paths to the actual job ID.
+- **PBS Pro**: Monitor both `.out` and `.err` files. Log filenames are fixed (no job ID expansion).
 - If the log path is relative, resolve it relative to the job's WorkDir (SLURM: from `scontrol`, PBS: from `PBS_O_WORKDIR`).
 - When sleeping/waiting, use `sleep` in Bash with `run_in_background` to avoid blocking.
 - Present errors with enough context (surrounding lines) for the user to understand.
-- See `docs/slurm.md` or `docs/cx3.md` in this plugin for full HPC reference.
+- See the `cluster-instructions` skill (`isambard.md` for SLURM, `cx3.md` for PBS Pro) for full HPC reference.
