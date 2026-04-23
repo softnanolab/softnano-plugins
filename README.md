@@ -1,6 +1,6 @@
 # softnano-plugins
 
-Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex). Skills live in a single `skills/` directory that both CLIs read.
+Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex). The shared plugin payload lives under `plugins/softnano/`, and both CLIs read the same `plugins/softnano/skills/` directory.
 
 ## Install
 
@@ -36,7 +36,7 @@ Invoke skills as `/softnano:<skill-name>` — e.g. `/softnano:monitor-jobs`, `/s
 To test locally without installing:
 
 ```bash
-claude --plugin-dir /path/to/softnano-plugins
+claude --plugin-dir /path/to/softnano-plugins/plugins/softnano
 ```
 
 ### Codex
@@ -58,10 +58,10 @@ codex plugin marketplace remove softnanolab-plugins
 
 Codex-specific notes:
 
-- The same `skills/` directory is loaded by both CLIs — no duplication.
+- The same `plugins/softnano/skills/` directory is loaded by both CLIs — no duplication.
 - Claude-only frontmatter fields (`argument-hint`) are silently ignored by Codex.
 - `allowed-tools`, `user-invocable`, and `disable-model-invocation` are recognised by both CLIs.
-- The plugin is named `softnano` even though the repo is `softnano-plugins`. Codex resolves the plugin name from `.codex-plugin/plugin.json`, not the directory, so a flat layout at the repo root works correctly.
+- The plugin is named `softnano` even though the repo is `softnano-plugins`. Both marketplace manifests point at `./plugins/softnano`, where the Claude and Codex plugin manifests live.
 
 ## Skills
 
@@ -202,32 +202,35 @@ Upload local image files to a Notion page. Uses the Notion File Upload REST API 
 ```
 softnano-plugins/
 ├── .claude-plugin/
-│   ├── plugin.json          # Claude Code plugin manifest
 │   └── marketplace.json     # Claude Code marketplace manifest
-├── .codex-plugin/
-│   └── plugin.json          # Codex plugin manifest
 ├── .agents/plugins/
 │   └── marketplace.json     # Codex marketplace manifest
-├── skills/                  # Shared — both CLIs read from here
-│   ├── codex/SKILL.md
-│   ├── monitor-jobs/SKILL.md
-│   ├── code-review/SKILL.md
-│   ├── edison/
-│   │   ├── SKILL.md
-│   │   └── scripts/edison_query.sh
-│   ├── cluster-instructions/
-│   │   ├── SKILL.md
-│   │   ├── cx3.md
-│   │   └── isambard.md
-│   ├── doi2bib/SKILL.md
-│   ├── grill-me/SKILL.md
-│   └── notion-upload/SKILL.md
+├── plugins/
+│   └── softnano/
+│       ├── .claude-plugin/
+│       │   └── plugin.json  # Claude Code plugin manifest
+│       ├── .codex-plugin/
+│       │   └── plugin.json  # Codex plugin manifest
+│       └── skills/          # Shared — both CLIs read from here
+│           ├── codex/SKILL.md
+│           ├── monitor-jobs/SKILL.md
+│           ├── code-review/SKILL.md
+│           ├── edison/
+│           │   ├── SKILL.md
+│           │   └── scripts/edison_query.sh
+│           ├── cluster-instructions/
+│           │   ├── SKILL.md
+│           │   ├── cx3.md
+│           │   └── isambard.md
+│           ├── doi2bib/SKILL.md
+│           ├── grill-me/SKILL.md
+│           └── notion-upload/SKILL.md
 └── .gitignore
 ```
 
 ## Adding New Skills
 
-Create `skills/<skill-name>/SKILL.md` with frontmatter:
+Create `plugins/softnano/skills/<skill-name>/SKILL.md` with frontmatter:
 
 ```yaml
 ---
@@ -238,4 +241,4 @@ allowed-tools: Bash, Read, Grep, Glob, Write
 ---
 ```
 
-Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then bump `version` in **both** `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` (keep them in sync) and push.
+Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then bump `version` in **both** `plugins/softnano/.claude-plugin/plugin.json` and `plugins/softnano/.codex-plugin/plugin.json` (keep them in sync) and push.

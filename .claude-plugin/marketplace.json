@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "softnano",
-      "source": "./",
+      "source": "./plugins/softnano",
       "description": "Shared Claude Code skills for the SoftNano lab"
     }
   ]
