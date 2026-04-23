@@ -7,5 +7,6 @@
     "url": "https://github.com/softnanolab"
   },
   "homepage": "https://github.com/softnanolab/softnano-plugins",
-  "repository": "https://github.com/softnanolab/softnano-plugins"
+  "repository": "https://github.com/softnanolab/softnano-plugins",
+  "skills": "./skills/"
 }
