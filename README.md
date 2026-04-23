@@ -1,16 +1,17 @@
 # softnano-plugins
 
-Shared [Claude Code](https://claude.com/claude-code) plugin for the SoftNano lab. Provides reusable skills for HPC job management across lab projects.
+Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex). Skills live in a single `skills/` directory that both CLIs read.
 
-## Installation
+## Install
+
+### Claude Code
 
 From within a Claude Code session:
 
 ```
 /plugin marketplace add softnanolab/softnano-plugins
+/plugin install softnano@softnanolab-plugins
 ```
-
-Then install the plugin from the **Discover** tab in `/plugin`.
 
 Or add directly to `~/.claude/settings.json`:
 
@@ -30,11 +31,37 @@ Or add directly to `~/.claude/settings.json`:
 }
 ```
 
+Invoke skills as `/softnano:<skill-name>` — e.g. `/softnano:monitor-jobs`, `/softnano:codex "review plan X"`.
+
 To test locally without installing:
 
 ```bash
 claude --plugin-dir /path/to/softnano-plugins
 ```
+
+### Codex
+
+Requires Codex **0.122.0** or newer (`brew upgrade codex` / `npm install -g @openai/codex`).
+
+```bash
+codex plugin marketplace add softnanolab/softnano-plugins
+```
+
+Then run `/plugins` inside a Codex session, select **softnano**, and install. Invoke skills with `$softnano <skill-name>` — e.g. `$softnano monitor-jobs`, `$softnano codex "review plan X"` — or pick them from the `/skills` menu.
+
+To update or remove:
+
+```bash
+codex plugin marketplace upgrade softnanolab-plugins
+codex plugin marketplace remove softnanolab-plugins
+```
+
+Codex-specific notes:
+
+- The same `skills/` directory is loaded by both CLIs — no duplication.
+- Claude-only frontmatter fields (`argument-hint`) are silently ignored by Codex.
+- `allowed-tools`, `user-invocable`, and `disable-model-invocation` are recognised by both CLIs.
+- The plugin is named `softnano` even though the repo is `softnano-plugins`. Codex resolves the plugin name from `.codex-plugin/plugin.json`, not the directory, so a flat layout at the repo root works correctly.
 
 ## Skills
 
@@ -138,6 +165,20 @@ Fetch a BibTeX entry for a given DOI via doi.org content negotiation.
 2. Runs `curl -LH "Accept: text/bibliography; style=bibtex" https://doi.org/<DOI>`
 3. Returns the BibTeX entry verbatim in a code block, ready to paste into a `.bib` file
 
+### `/softnano:grill-me`
+
+Stress-test a plan or design by having the agent interview you relentlessly, walking every branch of the decision tree until there's shared understanding.
+
+```
+/softnano:grill-me
+```
+
+**What it does:**
+1. Asks one focused question at a time
+2. Recommends an answer for each question
+3. Resolves dependencies between decisions before moving on
+4. Explores the codebase itself when a question is answerable that way
+
 ### `/softnano:notion-upload`
 
 Upload local image files to a Notion page. Uses the Notion File Upload REST API to embed PNGs, JPGs, and other images directly into a page.
@@ -154,32 +195,33 @@ Upload local image files to a Notion page. Uses the Notion File Upload REST API 
 
 **Prerequisites:** `NOTION_API_TOKEN` in your project `.env` file or as an environment variable. Create an integration at https://www.notion.so/profile/integrations and share the target page with it.
 
+## Reference Docs
+
 ## Project Structure
 
 ```
 softnano-plugins/
 ├── .claude-plugin/
-│   ├── plugin.json          # Plugin manifest
-│   └── marketplace.json     # Marketplace manifest
-├── skills/
-│   ├── cluster-instructions/
-│   │   ├── SKILL.md         # HPC detection & job submission
-│   │   ├── cx3.md           # Imperial PBS Pro reference
-│   │   └── isambard.md      # Isambard SLURM reference
-│   ├── code-review/
-│   │   └── SKILL.md
-│   ├── codex/
-│   │   └── SKILL.md
+│   ├── plugin.json          # Claude Code plugin manifest
+│   └── marketplace.json     # Claude Code marketplace manifest
+├── .codex-plugin/
+│   └── plugin.json          # Codex plugin manifest
+├── .agents/plugins/
+│   └── marketplace.json     # Codex marketplace manifest
+├── skills/                  # Shared — both CLIs read from here
+│   ├── codex/SKILL.md
+│   ├── monitor-jobs/SKILL.md
+│   ├── code-review/SKILL.md
 │   ├── edison/
 │   │   ├── SKILL.md
-│   │   └── scripts/
-│   │       └── edison_query.sh
-│   ├── doi2bib/
-│   │   └── SKILL.md
-│   ├── monitor-jobs/
-│   │   └── SKILL.md
-│   └── notion-upload/
-│       └── SKILL.md
+│   │   └── scripts/edison_query.sh
+│   ├── cluster-instructions/
+│   │   ├── SKILL.md
+│   │   ├── cx3.md
+│   │   └── isambard.md
+│   ├── doi2bib/SKILL.md
+│   ├── grill-me/SKILL.md
+│   └── notion-upload/SKILL.md
 └── .gitignore
 ```
 
@@ -196,4 +238,4 @@ allowed-tools: Bash, Read, Grep, Glob, Write
 ---
 ```
 
-Then bump `version` in `.claude-plugin/plugin.json` and push.
+Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then bump `version` in **both** `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` (keep them in sync) and push.
