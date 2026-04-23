@@ -1,7 +1,7 @@
 {
   "name": "softnano",
   "description": "Shared Claude Code skills for the SoftNano lab",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "authors": [
     { "name": "Harsh Agrawal" },
     { "name": "Jakub Lála" }

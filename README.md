@@ -125,6 +125,19 @@ Supports follow-up queries via `--continue-from <task_id>` to build on previous 
 
 **Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
 
+### `/softnano:doi2bib`
+
+Fetch a BibTeX entry for a given DOI via doi.org content negotiation.
+
+```
+/softnano:doi2bib <doi>
+```
+
+**What it does:**
+1. Accepts a bare DOI or full `https://doi.org/...` URL
+2. Runs `curl -LH "Accept: text/bibliography; style=bibtex" https://doi.org/<DOI>`
+3. Returns the BibTeX entry verbatim in a code block, ready to paste into a `.bib` file
+
 ### `/softnano:notion-upload`
 
 Upload local image files to a Notion page. Uses the Notion File Upload REST API to embed PNGs, JPGs, and other images directly into a page.
@@ -161,6 +174,8 @@ softnano-plugins/
 │   │   ├── SKILL.md
 │   │   └── scripts/
 │   │       └── edison_query.sh
+│   ├── doi2bib/
+│   │   └── SKILL.md
 │   ├── monitor-jobs/
 │   │   └── SKILL.md
 │   └── notion-upload/
