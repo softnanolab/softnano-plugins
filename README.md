@@ -110,6 +110,19 @@ Supports follow-up queries via `--continue-from <task_id>` to build on previous 
 
 **Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
 
+### `/softnano:doi2bib`
+
+Fetch a BibTeX entry for a given DOI via doi.org content negotiation.
+
+```
+/softnano:doi2bib <doi>
+```
+
+**What it does:**
+1. Accepts a bare DOI or full `https://doi.org/...` URL
+2. Runs `curl -LH "Accept: text/bibliography; style=bibtex" https://doi.org/<DOI>`
+3. Returns the BibTeX entry verbatim in a code block, ready to paste into a `.bib` file
+
 ## Reference Docs
 
 | File | Description |
@@ -134,10 +147,12 @@ softnano-plugins/
 │   │   └── SKILL.md
 │   ├── code-review/
 │   │   └── SKILL.md
-│   └── edison/
-│       ├── SKILL.md
-│       └── scripts/
-│           └── edison_query.sh
+│   ├── edison/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       └── edison_query.sh
+│   └── doi2bib/
+│       └── SKILL.md
 ├── docs/
 │   ├── slurm.md             # Isambard SLURM reference
 │   ├── cx3.md               # Imperial PBS Pro reference
