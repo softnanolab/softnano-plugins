@@ -1,7 +1,7 @@
 {
   "name": "softnano",
-  "description": "Shared Claude Code skills for the SoftNano lab",
-  "version": "0.5.0",
+  "description": "Shared skills for the SoftNano lab — HPC job monitoring, code review, literature search, DOI lookup, and more",
+  "version": "0.6.0",
   "authors": [
     { "name": "Harsh Agrawal" },
     { "name": "Jakub Lála" }
