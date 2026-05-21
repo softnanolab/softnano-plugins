@@ -56,7 +56,17 @@ Detect whether a pre-commit config and a test suite exist:
 
 ```bash
 test -f .pre-commit-config.yaml && echo "has pre-commit"
-test -f pyproject.toml || test -f setup.cfg || test -f pytest.ini || test -d tests && echo "has pytest"
+
+# pytest needs a real signal — a test directory OR explicit pytest config.
+# Do NOT use pyproject.toml/setup.cfg alone: those exist for packaging too,
+# and running pytest in a repo with no tests exits 5 ("no tests collected"),
+# which would fail the gate and block the PR for no reason.
+has_pytest=no
+{ test -d tests || test -d test; } && has_pytest=yes
+test -f pytest.ini && has_pytest=yes
+test -f pyproject.toml && grep -q '\[tool\.pytest' pyproject.toml && has_pytest=yes
+test -f setup.cfg && grep -q '^\[tool:pytest\]' setup.cfg && has_pytest=yes
+echo "has_pytest=$has_pytest"
 ```
 
 If either exists, you must run them before opening the PR. **On an HPC login node these are forbidden — they spawn many subprocesses and burn shared CPU.** Invoke the `cluster-instructions` skill to detect the environment:
@@ -132,8 +142,14 @@ Body template (use a HEREDOC, see "Creating pull requests" in the system instruc
 ## Step 5: Push and open the PR
 
 ```bash
-# Only if the branch isn't already tracking a remote
-git push -u origin HEAD
+# Check whether the branch already has an upstream. Never re-point an existing
+# upstream — in fork workflows that silently changes which remote subsequent
+# pulls/pushes hit. `-u` *sets* upstream; only use it when none exists.
+if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  git push                       # honour the existing upstream; abort on non-FF, don't force
+else
+  git push -u origin HEAD        # first push of this branch — set tracking to origin
+fi
 
 gh pr create --base <base-branch> [--draft] --title "<title>" --body "$(cat <<'EOF'
 <rendered body>
