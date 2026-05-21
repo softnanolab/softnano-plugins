@@ -179,6 +179,23 @@ Stress-test a plan or design by having the agent interview you relentlessly, wal
 3. Resolves dependencies between decisions before moving on
 4. Explores the codebase itself when a question is answerable that way
 
+### `/softnano:open-pr`
+
+Open a GitHub pull request with an auto-generated, deeply-reviewed summary.
+
+```
+/softnano:open-pr [base-branch] [--draft]
+```
+
+**What it does:**
+1. Fetches `origin/<base-branch>` (default `main`) and diffs against it
+2. Runs `pre-commit` and `pytest` as the quality gate — never on a login node; uses `cluster-instructions` to submit a job when on HPC
+3. Spawns 1–2 review subagents in parallel, each with a distinct lens (correctness, API, tests, security, performance)
+4. Composes a PR body containing the change summary, gate results, verbatim reviewer notes, and a test plan
+5. Pushes the branch and opens the PR via `gh pr create`, returning the URL
+
+Refuses to open the PR if the gate fails or the diff is empty. Uses `--draft` automatically if any reviewer flags a blocker.
+
 ### `/softnano:notion-upload`
 
 Upload local image files to a Notion page. Uses the Notion File Upload REST API to embed PNGs, JPGs, and other images directly into a page.
@@ -221,7 +238,8 @@ softnano-plugins/
 │   │   └── isambard.md
 │   ├── doi2bib/SKILL.md
 │   ├── grill-me/SKILL.md
-│   └── notion-upload/SKILL.md
+│   ├── notion-upload/SKILL.md
+│   └── open-pr/SKILL.md
 └── .gitignore
 ```
 
