@@ -114,26 +114,16 @@ Get a second opinion from OpenAI Codex CLI (GPT-5.4). Cross-check reasoning, val
 4. Reports the Codex response and notes agreements/disagreements
 5. Lets you decide how to proceed
 
-### `/softnano:code-review`
+### `/softnano:thermo-nuclear-code-quality-review`
 
-Review Python code against SoftNano style conventions. Checks docstrings, type annotations, tensor shape documentation, and commented-out code.
-
-```
-/softnano:code-review [file-or-directory]
-```
+An extremely strict maintainability review focused on abstraction quality, giant files, and spaghetti-condition growth. Adapted from Cursor.
 
 **What it does:**
-1. Identifies files to review (from argument, recent git diff, or staged files)
-2. Runs `ruff` lint/format checks if available
-3. Manual checks against SoftNano conventions:
-   - Google-style docstrings with `Args:`, `Returns:`
-   - Tensor shape documentation (`Expected Shape:`)
-   - Python 3.12+ type annotations (`x | None`, `list[int]`)
-   - Commented-out code has `# TODO: review` + `# ----` markers
-4. Reports findings by category and severity
-5. Offers to apply style-only fixes (no logic changes)
-
-If no file is given, it reviews staged or recently changed Python files.
+1. Performs a deep code-quality audit of the current branch's changes
+2. Hunts for "code judo" moves — restructurings that preserve behavior while making the implementation dramatically simpler
+3. Flags PRs that push files past 1000 lines, add ad-hoc branching to unrelated flows, leak feature logic into shared paths, or introduce unnecessary wrappers / casts / optionality
+4. Prefers deleting complexity over rearranging it; pushes for canonical helpers and explicit type boundaries
+5. Prioritizes a small number of high-conviction structural findings over cosmetic nits
 
 ### `/softnano:edison`
 
@@ -228,7 +218,7 @@ softnano-plugins/
 ├── skills/                  # Shared — both CLIs read from here
 │   ├── codex/SKILL.md
 │   ├── monitor-jobs/SKILL.md
-│   ├── code-review/SKILL.md
+│   ├── thermo-nuclear-code-quality-review/SKILL.md
 │   ├── edison/
 │   │   ├── SKILL.md
 │   │   └── scripts/edison_query.sh
