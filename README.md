@@ -186,6 +186,40 @@ Open a GitHub pull request with an auto-generated, deeply-reviewed summary.
 
 Refuses to open the PR if the gate fails or the diff is empty. Uses `--draft` automatically if any reviewer flags a blocker.
 
+### `/softnano:polish-pr`
+
+Follow-up pass on an open PR: address Codex review comments, re-run the thermo-nuclear review, sync with the base branch, and push the updates.
+
+```
+/softnano:polish-pr [pr-number] [--base <branch>] [--no-rebase]
+```
+
+**What it does:**
+1. Resolves the PR for the current branch (or the given number) and pulls open review threads via the GitHub GraphQL API
+2. For each unresolved Codex thread: reads the code, applies a minimal fix, replies on the thread, and marks it resolved
+3. Re-runs `/softnano:thermo-nuclear-code-quality-review` against the resulting diff and addresses blocker/should-fix findings
+4. Fetches the base branch and rebases (or merges, if requested) when new commits have landed
+5. Pushes the updated branch (`--force-with-lease` only when a rebase rewrote history) and reports what was resolved, skipped, or escalated
+
+Never auto-resolves human reviewer threads, never force-pushes without `--force-with-lease`, and stops on rebase conflicts so the user can resolve them.
+
+### `/softnano:cleanup`
+
+Post-merge teardown for a feature branch and its worktree.
+
+```
+/softnano:cleanup [pr-number]
+```
+
+**What it does:**
+1. Verifies via `gh pr view` that the PR is actually `MERGED` — refuses otherwise
+2. Deletes the remote feature branch (no-ops if GitHub already auto-deleted it; skipped for fork PRs)
+3. Removes the current git worktree using `ExitWorktree` (or `git worktree remove` from the main worktree as a fallback) — never `rm -rf`
+4. Safely deletes the local feature branch (`-d`; falls back to `-D` only after confirming the PR is merged, e.g. squash-merge cases)
+5. Fast-forwards `main` in the main worktree and reports what was deleted
+
+Refuses to delete `main`, refuses to operate on a dirty worktree without confirmation, and refuses to force-delete a branch without a verified-merged PR backing it.
+
 ### `/softnano:notion-upload`
 
 Upload local image files to a Notion page. Uses the Notion File Upload REST API to embed PNGs, JPGs, and other images directly into a page.
@@ -228,8 +262,10 @@ softnano-plugins/
 │   │   └── isambard.md
 │   ├── doi2bib/SKILL.md
 │   ├── grill-me/SKILL.md
+│   ├── cleanup/SKILL.md
 │   ├── notion-upload/SKILL.md
-│   └── open-pr/SKILL.md
+│   ├── open-pr/SKILL.md
+│   └── polish-pr/SKILL.md
 └── .gitignore
 ```
 
