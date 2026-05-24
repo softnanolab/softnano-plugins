@@ -59,7 +59,7 @@ codex plugin marketplace remove softnanolab-plugins
 Codex-specific notes:
 
 - Claude Code reads the root plugin; Codex reads the marketplace entry at `plugins/softnano`.
-- Keep `skills/` and `plugins/softnano/skills/` synchronized when editing shared skills.
+- Keep `skills/` and `plugins/softnano/skills/` synchronized with `scripts/sync-codex-skills.sh`; verify with `scripts/check-codex-skill-sync.sh`.
 - The cross-agent helper intentionally differs: Claude Code exposes `/softnano:codex`; Codex exposes `$softnano claude`.
 - Claude-only frontmatter fields (`argument-hint`) are silently ignored by Codex.
 - `allowed-tools` and `user-invocable` are recognised by both CLIs. Avoid `disable-model-invocation` in Codex-packaged skills; the Codex plugin validator rejects it.
@@ -262,8 +262,6 @@ softnano-plugins/
 ├── .claude-plugin/
 │   ├── plugin.json          # Claude Code plugin manifest
 │   └── marketplace.json     # Claude Code marketplace manifest
-├── .codex-plugin/
-│   └── plugin.json          # Root manifest kept in sync with the Codex plugin copy
 ├── .agents/plugins/
 │   └── marketplace.json     # Codex marketplace manifest
 ├── skills/                  # Claude Code skill tree
@@ -289,6 +287,9 @@ softnano-plugins/
 │   └── softnano/            # Codex plugin root referenced by marketplace.json
 │       ├── .codex-plugin/plugin.json
 │       └── skills/          # Codex skill tree; uses claude/ instead of codex/
+├── scripts/
+│   ├── check-codex-skill-sync.sh
+│   └── sync-codex-skills.sh
 └── .gitignore
 ```
 
@@ -305,4 +306,4 @@ allowed-tools: Bash, Read, Grep, Glob, Write
 ---
 ```
 
-Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then copy shared skill updates into `plugins/softnano/skills/`, bump `version` in `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `plugins/softnano/.codex-plugin/plugin.json` (keep them in sync), and push. Keep the cross-agent helper intentionally split: root `skills/codex/` is for Claude Code, while `plugins/softnano/skills/claude/` is for Codex.
+Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then run `scripts/sync-codex-skills.sh`, bump `version` in `.claude-plugin/plugin.json` and `plugins/softnano/.codex-plugin/plugin.json` (keep them in sync), run `scripts/check-codex-skill-sync.sh`, and push. Keep the cross-agent helper intentionally split: root `skills/codex/` is for Claude Code, while `plugins/softnano/skills/claude/` is for Codex.

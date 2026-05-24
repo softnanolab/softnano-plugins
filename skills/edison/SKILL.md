@@ -34,15 +34,29 @@ If no query is provided, ask the user what they want to research.
 
 ## Step 1: Run the query
 
-Resolve the skill directory first:
+Resolve the Edison script path first:
 
-- Claude Code exposes it as `CLAUDE_SKILL_DIR`.
-- In Codex, use the directory containing this `SKILL.md`.
+- Claude Code exposes the skill directory as `CLAUDE_SKILL_DIR`.
+- In Codex, find the installed SoftNano Edison skill under `CODEX_HOME` or `~/.codex`.
 
 Run the script with `run_in_background: true` and `timeout: 600000` (10 minutes):
 
 ```bash
-"$SKILL_DIR/scripts/edison_query.sh" --query "<the research question>"
+if [ -n "${CLAUDE_SKILL_DIR:-}" ]; then
+    EDISON_SCRIPT="$CLAUDE_SKILL_DIR/scripts/edison_query.sh"
+else
+    EDISON_SCRIPT="$(
+        find "${CODEX_HOME:-$HOME/.codex}" \
+            -path "*/softnanolab-plugins/softnano/*/skills/edison/scripts/edison_query.sh" \
+            -print -quit
+    )"
+fi
+
+if [ -z "${EDISON_SCRIPT:-}" ] || [ ! -x "$EDISON_SCRIPT" ]; then
+    echo '{"error": "Could not locate executable edison_query.sh in the installed SoftNano skill."}'
+else
+    "$EDISON_SCRIPT" --query "<the research question>"
+fi
 ```
 
 The script authenticates, submits the query, and polls every 15s until Edison returns an answer (up to 10 minutes). Progress messages appear on stderr. The final result is a JSON object on stdout:
@@ -77,7 +91,21 @@ Once the script returns:
 To continue a previous research thread (e.g., ask a follow-up question that builds on prior context), use `--continue-from`:
 
 ```bash
-"$SKILL_DIR/scripts/edison_query.sh" --query "<follow-up question>" --continue-from <task_id>
+if [ -n "${CLAUDE_SKILL_DIR:-}" ]; then
+    EDISON_SCRIPT="$CLAUDE_SKILL_DIR/scripts/edison_query.sh"
+else
+    EDISON_SCRIPT="$(
+        find "${CODEX_HOME:-$HOME/.codex}" \
+            -path "*/softnanolab-plugins/softnano/*/skills/edison/scripts/edison_query.sh" \
+            -print -quit
+    )"
+fi
+
+if [ -z "${EDISON_SCRIPT:-}" ] || [ ! -x "$EDISON_SCRIPT" ]; then
+    echo '{"error": "Could not locate executable edison_query.sh in the installed SoftNano skill."}'
+else
+    "$EDISON_SCRIPT" --query "<follow-up question>" --continue-from <task_id>
+fi
 ```
 
 This reuses the papers and context from the previous task, giving Edison a head start. Use this when the user wants to dig deeper into a topic they already queried.
