@@ -34,6 +34,8 @@ When editing a shared skill, run:
 ```
 scripts/sync-codex-skills.sh
 scripts/check-codex-skill-sync.sh
+python3 scripts/check-codex-plugin.py
 ```
 
 The Codex tree intentionally keeps `plugins/softnano/skills/claude/` as a Codex-only replacement for root `skills/codex/`.
+CI runs the same checks on pull requests and on pushes to `main`.

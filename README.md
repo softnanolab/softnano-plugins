@@ -59,7 +59,7 @@ codex plugin marketplace remove softnanolab-plugins
 Codex-specific notes:
 
 - Claude Code reads the root plugin; Codex reads the marketplace entry at `plugins/softnano`.
-- Keep `skills/` and `plugins/softnano/skills/` synchronized with `scripts/sync-codex-skills.sh`; verify with `scripts/check-codex-skill-sync.sh`.
+- Keep `skills/` and `plugins/softnano/skills/` synchronized with `scripts/sync-codex-skills.sh`; verify with `scripts/check-codex-skill-sync.sh` and `python3 scripts/check-codex-plugin.py`. CI runs these checks on pull requests.
 - The cross-agent helper intentionally differs: Claude Code exposes `/softnano:codex`; Codex exposes `$softnano claude`.
 - Claude-only frontmatter fields (`argument-hint`) are silently ignored by Codex.
 - `allowed-tools` and `user-invocable` are recognised by both CLIs. Avoid `disable-model-invocation` in Codex-packaged skills; the Codex plugin validator rejects it.
