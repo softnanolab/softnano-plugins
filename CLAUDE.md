@@ -9,6 +9,7 @@ Whenever a PR adds, replaces, or meaningfully changes a skill (anything user-vis
 1. **Bump the version** in both plugin manifests, kept in lockstep:
    - `.claude-plugin/plugin.json`
    - `.codex-plugin/plugin.json`
+   - `plugins/softnano/.codex-plugin/plugin.json`
 
    Use semver against the current value:
    - Patch (`0.x.y` → `0.x.(y+1)`): docs, internal refactors, bug fixes inside an existing skill.

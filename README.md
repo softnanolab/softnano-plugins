@@ -1,6 +1,6 @@
 # softnano-plugins
 
-Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex). Skills live in a single `skills/` directory that both CLIs read.
+Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex).
 
 ## Install
 
@@ -58,10 +58,11 @@ codex plugin marketplace remove softnanolab-plugins
 
 Codex-specific notes:
 
-- The same `skills/` directory is loaded by both CLIs — no duplication.
+- Claude Code reads the root plugin; Codex reads the marketplace entry at `plugins/softnano`.
+- Keep `skills/` and `plugins/softnano/skills/` synchronized when editing skills.
 - Claude-only frontmatter fields (`argument-hint`) are silently ignored by Codex.
 - `allowed-tools`, `user-invocable`, and `disable-model-invocation` are recognised by both CLIs.
-- The plugin is named `softnano` even though the repo is `softnano-plugins`. Codex resolves the plugin name from `.codex-plugin/plugin.json`, not the directory, so a flat layout at the repo root works correctly.
+- The plugin is named `softnano` even though the repo is `softnano-plugins`. Codex resolves the plugin name from `plugins/softnano/.codex-plugin/plugin.json`; the marketplace path must be non-empty.
 
 ## Skills
 
@@ -101,7 +102,7 @@ Includes full reference docs for CX3 (PBS Pro) and Isambard (SLURM) with job tem
 
 ### `/softnano:codex`
 
-Get a second opinion from OpenAI Codex CLI (GPT-5.4). Cross-check reasoning, validate plans, or get an independent code review.
+Get a second opinion from OpenAI Codex CLI. Cross-check reasoning, validate plans, or get an independent code review.
 
 ```
 /softnano:codex <task or question>
@@ -140,7 +141,7 @@ Conduct scientific literature research using Edison's autonomous search API. Edi
 
 Supports follow-up queries via `--continue-from <task_id>` to build on previous searches.
 
-**Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
+**Prerequisites:** `EDISON_PLATFORM_API_KEY` in the agent environment, and `jq` installed. Claude Code users can set it in `~/.claude/settings.json` under `"env"`; Codex users can set it in their shell or project environment.
 
 ### `/softnano:doi2bib`
 
@@ -246,10 +247,10 @@ softnano-plugins/
 │   ├── plugin.json          # Claude Code plugin manifest
 │   └── marketplace.json     # Claude Code marketplace manifest
 ├── .codex-plugin/
-│   └── plugin.json          # Codex plugin manifest
+│   └── plugin.json          # Root manifest kept in sync with the Codex plugin copy
 ├── .agents/plugins/
 │   └── marketplace.json     # Codex marketplace manifest
-├── skills/                  # Shared — both CLIs read from here
+├── skills/                  # Claude Code skill tree
 │   ├── codex/SKILL.md
 │   ├── monitor-jobs/SKILL.md
 │   ├── thermo-nuclear-code-quality-review/SKILL.md
@@ -266,6 +267,10 @@ softnano-plugins/
 │   ├── notion-upload/SKILL.md
 │   ├── open-pr/SKILL.md
 │   └── polish-pr/SKILL.md
+├── plugins/
+│   └── softnano/            # Codex plugin root referenced by marketplace.json
+│       ├── .codex-plugin/plugin.json
+│       └── skills/          # Codex copy of the skill tree
 └── .gitignore
 ```
 
@@ -282,4 +287,4 @@ allowed-tools: Bash, Read, Grep, Glob, Write
 ---
 ```
 
-Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then bump `version` in **both** `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` (keep them in sync) and push.
+Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then copy the updated skill into `plugins/softnano/skills/`, bump `version` in `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `plugins/softnano/.codex-plugin/plugin.json` (keep them in sync), and push.
