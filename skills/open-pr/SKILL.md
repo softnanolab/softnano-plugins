@@ -1,13 +1,20 @@
 ---
 name: open-pr
-description: Open a GitHub pull request with a thorough auto-generated summary. Use when the user asks to open, create, or draft a PR. Fetches origin/main, runs pre-commit and pytest (off the login node on HPC), spawns 1–2 review subagents that deeply review the diff, and posts their findings into the PR body.
+description: Open a GitHub pull request with a thorough auto-generated summary. Use when the user asks to open, create, or draft a PR. Fetches origin/main, mandatorily runs all pre-commit checks and pytest (off the login node on HPC), mandatorily runs /thermo-nuclear-code-quality-review against the diff, spawns 1–2 additional review subagents that deeply review the diff, and posts their findings into the PR body.
 argument-hint: "[base-branch (default: main)] [--draft]"
 allowed-tools: Bash, Read, Grep, Glob, Agent, Write, Edit
 ---
 
 # Open PR
 
-End-to-end PR creation: diff against `origin/main`, run the project's quality gates (pre-commit + pytest) on a compute node when on HPC, spawn deep-review subagents, and post a rich PR description with everything stitched together.
+End-to-end PR creation: diff against `origin/main`, run the project's quality gates (pre-commit + pytest) on a compute node when on HPC, run `/thermo-nuclear-code-quality-review` against the diff, spawn deep-review subagents, and post a rich PR description with everything stitched together.
+
+**Two checks are mandatory on every invocation and cannot be skipped by the user:**
+
+1. All pre-commit hooks defined in `.pre-commit-config.yaml` (if a config exists).
+2. `/thermo-nuclear-code-quality-review`, run against the diff.
+
+If the user asks you to "skip pre-commit", "skip thermo-nuclear", "skip the review", or any equivalent, refuse and explain that these gates are now mandatory for this skill. They can still skip `pytest` separately if they ask.
 
 ## Input
 
@@ -52,6 +59,8 @@ Build a punch list of the diff: files touched, rough categories (feature, bugfix
 
 ## Step 2: Run pre-commit and pytest — NOT on a login node
 
+**Pre-commit is mandatory if `.pre-commit-config.yaml` exists.** You may not skip it, even if the user asks. If `pre-commit` is not installed, install it (`pip install pre-commit`) before continuing — do not silently bypass the gate.
+
 Detect whether a pre-commit config and a test suite exist:
 
 ```bash
@@ -85,9 +94,19 @@ If `pre-commit` is not installed but a config exists, install it first (`pip ins
 
 **Do not open the PR if the gate fails.** Report the failure, surface the relevant log lines, and stop. The user fixes the failure, then re-runs the skill.
 
-If the user explicitly says "skip tests" or "skip hooks", honour that but call it out loudly in the PR body under a `## Skipped checks` heading.
+If the user explicitly says "skip tests", honour that for `pytest` only and call it out loudly in the PR body under a `## Skipped checks` heading. **Pre-commit cannot be skipped** — if the user asks, refuse and point them at this section.
+
+## Step 2b: Run /thermo-nuclear-code-quality-review (mandatory)
+
+Invoke `/thermo-nuclear-code-quality-review` against the current diff. This is non-negotiable on every PR — do not skip it, even if the user asks, even on small diffs, even on diffs that "obviously" don't need it.
+
+The skill returns a structured maintainability review. Capture its full report verbatim — you will paste it into the PR body in Step 4 under `## Thermo-nuclear review`.
+
+If `/thermo-nuclear-code-quality-review` flags a **blocker**, open the PR as `--draft` regardless of whether the user passed the flag, and call out the blocker(s) at the top of the PR body.
 
 ## Step 3: Spawn deep-review subagents (in parallel)
+
+These run *in addition to* `/thermo-nuclear-code-quality-review` from Step 2b — that pass covers maintainability and structural quality; these lenses cover correctness, security, performance, etc. Do not pick a lens that overlaps with thermo-nuclear (e.g., "maintainability" or "abstraction quality" — that's already covered).
 
 Launch 1–2 subagents in a **single message with parallel `Agent` tool calls**. Use `subagent_type=general-purpose` (or `code-reviewer` if the host project defines one). Each agent gets the full diff path and a distinct lens — overlap is wasted budget.
 
@@ -122,9 +141,13 @@ Body template (use a HEREDOC, see "Creating pull requests" in the system instruc
 - ...
 
 ## Quality gates
-- pre-commit: <pass | fail | skipped — reason>
+- pre-commit: <pass | fail>   <!-- never "skipped"; mandatory -->
 - pytest: <N passed, M failed | skipped — reason>
+- thermo-nuclear review: <ran — N blockers, M should-fix, K nits>
 - Ran on: <hostname / cluster / compute-node-job-id>
+
+## Thermo-nuclear review
+<verbatim report from /thermo-nuclear-code-quality-review>
 
 ## Reviewer notes — <lens A>
 <verbatim subagent report A>
@@ -157,7 +180,7 @@ EOF
 )"
 ```
 
-Use `--draft` if the user asked for one, if any review subagent flagged a **blocker**, or if the gate was skipped.
+Use `--draft` if the user asked for one, if `/thermo-nuclear-code-quality-review` or any review subagent flagged a **blocker**, or if `pytest` was skipped.
 
 Return the PR URL to the user. Do not also paste the body back — they can read it on GitHub.
 
