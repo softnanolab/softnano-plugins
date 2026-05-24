@@ -87,19 +87,19 @@ If no job ID is given, it finds and monitors the user's active jobs.
 
 ### `/softnano:cluster-instructions`
 
-Detect which HPC cluster you are on and load the correct job submission instructions. Covers CX3 (PBS Pro) and Isambard (SLURM).
+Detect which HPC cluster you are on and load the correct job submission instructions. Covers CX3/HX1 (PBS Pro), Isambard (SLURM), new MMM Young NG (SLURM), and old MMM Young (SGE).
 
 ```
 /softnano:cluster-instructions [command-to-run]
 ```
 
 **What it does:**
-1. Detects the cluster from `pwd` and available scheduler commands
+1. Detects the cluster from host/path and available scheduler commands
 2. Checks if you are on a login node or compute node
 3. Loads cluster-specific instructions (queues, templates, storage paths)
 4. Submits the command via the correct scheduler, or reports the detected environment
 
-Includes full reference docs for CX3 (PBS Pro) and Isambard (SLURM) with job templates, queue tables, and common commands.
+Includes full reference docs for CX3/HX1 (PBS Pro), Isambard (SLURM), MMM Young NG (SLURM/A100), and MMM old Young (SGE) with job templates, queue tables, and common commands. `softnanolab-campus` is treated as a workstation/gateway host; the skill instructs agents to SSH onward to the real cluster instead of treating campus-local scheduler clients as authoritative.
 
 ### `/softnano:codex` (Claude Code)
 
@@ -276,7 +276,9 @@ softnano-plugins/
 │   ├── cluster-instructions/
 │   │   ├── SKILL.md
 │   │   ├── cx3.md
-│   │   └── isambard.md
+│   │   ├── isambard.md
+│   │   ├── mmm-sge.md
+│   │   └── mmm-slurm.md
 │   ├── doi2bib/SKILL.md
 │   ├── grill-me/SKILL.md
 │   ├── cleanup/SKILL.md

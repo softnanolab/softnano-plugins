@@ -16,31 +16,51 @@ You are on an HPC cluster. Before submitting any jobs or running heavy commands,
 Run these checks in order:
 
 ```bash
-# Check working directory path
+# Check host and working directory path
+hostname
+hostname -f 2>/dev/null || true
 pwd
 
 # Check available scheduler
-command -v sbatch && echo "SLURM" || (command -v qsub && echo "PBS" || echo "UNKNOWN")
+if command -v sbatch >/dev/null 2>&1; then
+    echo "SLURM"
+elif command -v qsub >/dev/null 2>&1 && command -v qconf >/dev/null 2>&1; then
+    echo "SGE"
+elif command -v qsub >/dev/null 2>&1; then
+    echo "PBS"
+else
+    echo "UNKNOWN"
+fi
 ```
 
 | Path pattern | Cluster | Scheduler | Instructions |
 |---|---|---|---|
 | `/rds/general/user/<user>/home/` | Imperial CX3 | PBS Pro | `cx3.md` in this skill |
 | `/gpfs/home/<user>` | Imperial HX1 | PBS Pro | Use CX3 instructions (`cx3.md`) |
+| `/lustre/home/<user>` + `sbatch` available + Young hostname | UCL MMM Young NG (`ssh mmm`) | SLURM | `mmm-slurm.md` in this skill |
+| `/lustre/home/<user>` + `qsub`/`qconf` available + Young hostname | UCL MMM old Young (`ssh mmm-old`) | SGE / Grid Engine | `mmm-sge.md` in this skill |
 | `/home/<project>/<user>.<project>/` + `/projects/<project>/` exists | Isambard AI | SLURM | `isambard.md` in this skill |
+| `softnanolab-HP-Z8-G4-Workstation` / `softnanolab-campus` | SoftNano campus workstation | local/gateway host | Do not treat as a cluster; SSH onward to `mmm`, `mmm-old`, `hx1`, or `leprotein` |
 
 If none match, ask the user which cluster they are on.
+
+Detection order matters. A plain "SLURM exists" check is not enough: MMM Young NG and Isambard both expose SLURM, while the SoftNano campus workstation may have SLURM client binaries without being the intended cluster target. Use host/path first, then the scheduler.
 
 ## Step 2: Check if you are on a login node
 
 - **CX3**: Run `hostname`. If it contains `login`, you are on a login node — do not run compute commands directly. If it does NOT contain `login`, you are on a compute node and can run short Python commands directly.
+- **MMM Young NG (`ssh mmm`)**: Hostnames like `login*.young.ucl.ac.uk` are login nodes. Use `sbatch` or `srun` via the MMM SLURM instructions.
+- **MMM old Young (`ssh mmm-old`)**: Hostnames like `login*.ib.young.ucl.ac.uk` are login nodes. Use `qsub`; this is SGE, not PBS.
 - **Isambard**: Assume login node unless inside an `srun` session or a batch job.
+- **SoftNano campus**: This is a workstation/gateway. Do not run HPC workloads there just because scheduler client commands exist; SSH to the actual cluster first.
 
 ## Step 3: Load cluster-specific instructions
 
 Read the appropriate file from this skill's directory:
 
 - **CX3 / HX1**: Read `cx3.md` — covers PBS Pro queues, job templates, key patterns, common commands, and storage paths.
+- **MMM Young NG**: Read `mmm-slurm.md` — covers SLURM partitions/QoS, GPU A100 requests, modules, and common commands.
+- **MMM old Young**: Read `mmm-sge.md` — covers SGE queues, project/account flags, GPU requests, modules, and common commands.
 - **Isambard**: Read `isambard.md` — covers SLURM job templates, GPU allocation (Grace Hopper Superchips), DDP setup, and common commands.
 
 Follow those instructions for all job submission, script creation, and resource allocation decisions.
@@ -54,6 +74,8 @@ If `$ARGUMENTS` contains a command or script to run:
 3. For quick commands on a compute node: run directly.
 4. For quick commands on a login node:
    - **CX3**: Use `qsub -I` for an interactive session.
+   - **MMM Young NG**: Use `srun` with a partition/QoS from `mmm-slurm.md`.
+   - **MMM old Young**: Use `qsub` with flags from `mmm-sge.md`; do not run tests directly on the login node.
    - **Isambard**: Use `srun` for an interactive session.
 
 If no arguments are provided, just report which cluster and node type you detected.
