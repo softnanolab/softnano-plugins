@@ -1,6 +1,6 @@
 {
   "name": "softnano",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Shared skills for the SoftNano lab — HPC job monitoring, code review, literature search, DOI lookup, and more",
   "author": {
     "name": "SoftNano Lab",
@@ -23,7 +23,7 @@
     "defaultPrompt": [
       "Monitor my HPC job",
       "Open a PR for this branch",
-      "Fetch BibTeX for this DOI"
+      "Ask Claude to review this plan"
     ],
     "brandColor": "#0F766E",
     "screenshots": []
