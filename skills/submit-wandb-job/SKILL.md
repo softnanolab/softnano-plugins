@@ -16,7 +16,6 @@ Enforces a wandb/commit contract on top of `cluster-instructions`. For training/
 | `WANDB_PROJECT` | `.env: WANDB_PROJECT` or snake_case repo basename | constant per repo |
 | `WANDB_RUN_GROUP` | user, per invocation (`tmp` for one-offs) | one per invocation |
 | `WANDB_NAME` | `<group>__<tag>` | one per job |
-| `WANDB_NOTES` | `commit: <SHA>` (+ `(dirty)` if not pinned) | one per invocation |
 
 The skill exports these env vars in the job script. **The experiment/group name must be a config key in the training script** (e.g. Hydra `meta.experiment_name`, or whatever the project's equivalent is) — the user's command should include the override (e.g. `... meta.experiment_name=<group>`) so the training code receives the same value the skill sets in `WANDB_RUN_GROUP`. If the training script hardcodes the experiment name or the wandb project, that's a real bug in the project — surface it and ask the user to fix it; don't paper over it from this skill.
 
@@ -85,7 +84,6 @@ One script per job at `$JOBS_DIR/<project>/<group>/<group>__<tag>.{sh,batch}`. U
 export WANDB_PROJECT="<project>"
 export WANDB_RUN_GROUP="<group>"
 export WANDB_NAME="<group>__<tag>"
-export WANDB_NOTES="commit: <HEAD_SHA>"   # append " (dirty)" if commit_pinned=false
 cd "$REPO_ROOT"
 ```
 
