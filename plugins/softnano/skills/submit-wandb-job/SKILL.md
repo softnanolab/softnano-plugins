@@ -1,7 +1,7 @@
 ---
 name: submit-wandb-job
 description: Submit one or more wandb-logged training/finetuning runs to the HPC scheduler. `WANDB_PROJECT` is fixed per repo (snake_case basename); `WANDB_RUN_GROUP` is picked per invocation. The training script must take the experiment/group name as a config key (e.g. Hydra `meta.experiment_name=<group>`); the skill passes it on the command line. The working tree is committed first so each run pins to a real SHA. Delegates SLURM/PBS templating to `cluster-instructions`. Use when the user asks to submit, queue, launch, or kick off a wandb training/finetuning job.
-argument-hint: "[N (jobs, default 1)] [--group <name>] [--oneoff] [--skip-commit-check]"
+argument-hint: "[N (jobs, default 1)] [--group <name>] [--one-off] [--skip-commit-check]"
 allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Skill, AskUserQuestion
 ---
 
@@ -37,7 +37,7 @@ Refuse on: not a git repo, or detached HEAD without explicit consent.
 
 In order:
 
-1. **One-off** — if `--oneoff` was passed, or the user said "one-off / throwaway / quick test / scratch / ad hoc": set `group = tmp`, no questions asked.
+1. **One-off** — if `--one-off` was passed, or the user said "one-off / throwaway / quick test / scratch / ad hoc": set `group = tmp`, no questions asked.
 2. **Explicit** — `--group <name>` or a name in the conversation: use it.
 3. **Suggest, then ask** — gather candidates from:
    - `$JOBS_DIR/*/` directories (prior groups from this skill).
@@ -73,11 +73,11 @@ If `N > 1` and the user hasn't said how the jobs differ, ask — don't invent ab
 
 ## Step 5 — Cluster + paths
 
-Invoke `cluster-instructions` (Skill tool) for scheduler detection and templates. Don't submit from this skill directly. Pick up `JOBS_DIR` from `.env` (fall back to `$REPO_ROOT/jobs`), `mkdir -p $JOBS_DIR/<group>/logs`.
+Invoke `cluster-instructions` (Skill tool) for scheduler detection and templates. Don't submit from this skill directly. Pick up `JOBS_DIR` from `.env` (fall back to `$REPO_ROOT/jobs`), `mkdir -p $JOBS_DIR/<project>/<group>/logs`. The `<project>` outer level matches `monitor-jobs`' documented `$JOBS_DIR/<project>/` layout; `<group>` nests inside so related runs cluster on disk too.
 
 ## Step 6 — Generate scripts
 
-One script per job at `$JOBS_DIR/<group>/<group>__<tag>.{sh,batch}`. Use the scheduler header from `cluster-instructions`. Before the user's command:
+One script per job at `$JOBS_DIR/<project>/<group>/<group>__<tag>.{sh,batch}`. Use the scheduler header from `cluster-instructions`. Before the user's command:
 
 ```bash
 export WANDB_PROJECT="<project>"
@@ -101,7 +101,7 @@ Show the scripts (`cat`) and pause for confirmation if any of: `N > 3`, `commit_
 ## Submitted <N> job(s) to <cluster>
 
 - **project**: `<project>`   **group**: `<group>`
-- **commit**: `<short-SHA>` — `<subject>`    <!-- or "⚠️ dirty submit, not pinned" -->
+- **commit**: `<short-SHA>` — `<subject>`    <!-- or "dirty submit — not pinned" if commit_pinned=false -->
 - **logs**: `<absolute path>`
 
 | # | Job ID | Tag | Script | Log |

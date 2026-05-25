@@ -118,9 +118,9 @@ If the job is running and healthy, offer to keep monitoring. If the user wants c
 
 | What | Path |
 |------|------|
-| Job scripts | `$JOBS_DIR/<project>/` |
-| SLURM logs | `$JOBS_DIR/<project>/logs/` (or as specified by `#SBATCH --output`) |
-| PBS logs | `$JOBS_DIR/<project>/logs/` (or as specified by `#PBS -o` / `#PBS -e`) |
+| Job scripts | `$JOBS_DIR/<project>/[<group>/]` (the optional `<group>/` sub-dir is used by `/softnano:submit-wandb-job`) |
+| SLURM logs | `$JOBS_DIR/<project>/[<group>/]logs/` (or as specified by `#SBATCH --output`) |
+| PBS logs | `$JOBS_DIR/<project>/[<group>/]logs/` (or as specified by `#PBS -o` / `#PBS -e`) |
 | Env vars | `$PROJECT_ROOT/.env` → `JOBS_DIR` |
 
 ## CX3 (PBS Pro) Reference
