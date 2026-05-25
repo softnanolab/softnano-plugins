@@ -1,6 +1,6 @@
 ---
 name: submit-wandb-job
-description: Submit one or more wandb-logged training/finetuning runs to the HPC scheduler. `WANDB_PROJECT` is fixed per repo (snake_case basename); `WANDB_RUN_GROUP` is picked per invocation; the working tree is committed first so each run pins to a real SHA. Delegates SLURM/PBS templating to `cluster-instructions`. Use when the user asks to submit, queue, launch, or kick off a wandb training/finetuning job.
+description: Submit one or more wandb-logged training/finetuning runs to the HPC scheduler. `WANDB_PROJECT` is fixed per repo (snake_case basename); `WANDB_RUN_GROUP` is picked per invocation. The training script must take the experiment/group name as a config key (e.g. Hydra `meta.experiment_name=<group>`); the skill passes it on the command line. The working tree is committed first so each run pins to a real SHA. Delegates SLURM/PBS templating to `cluster-instructions`. Use when the user asks to submit, queue, launch, or kick off a wandb training/finetuning job.
 argument-hint: "[N (jobs, default 1)] [--group <name>] [--oneoff] [--skip-commit-check]"
 allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Skill, AskUserQuestion
 ---
@@ -18,7 +18,7 @@ Enforces a wandb/commit contract on top of `cluster-instructions`. For training/
 | `WANDB_NAME` | `<group>__<tag>` | one per job |
 | `WANDB_NOTES` | `commit: <SHA>` (+ `(dirty)` if not pinned) | one per invocation |
 
-The skill exports these in the job script. The user's training code must consult them (e.g., not hardcode `WandbLogger(project=...)`); if it does, surface that and suggest Hydra-style overrides in the command — don't edit their code.
+The skill exports these env vars in the job script. **The experiment/group name must be a config key in the training script** (e.g. Hydra `meta.experiment_name`, or whatever the project's equivalent is) — the user's command should include the override (e.g. `... meta.experiment_name=<group>`) so the training code receives the same value the skill sets in `WANDB_RUN_GROUP`. If the training script hardcodes the experiment name or the wandb project, that's a real bug in the project — surface it and ask the user to fix it; don't paper over it from this skill.
 
 ## Step 0 — Pre-flight
 
@@ -66,7 +66,7 @@ Don't include untracked files unless the user says so.
 
 Ask for `N` if not in `$ARGUMENTS` (default 1). For each job collect:
 
-- **Command** — full invocation (user usually states it; ask if not). Skill is agnostic to Hydra/argparse/CLI shape — don't parse it.
+- **Command** — full invocation (user usually states it; ask if not). Skill is agnostic to Hydra/argparse/CLI shape — don't parse it, but do check that the command sets the experiment/group name as a config key (e.g. `meta.experiment_name=<group>`). If it doesn't, ask the user to add it before continuing — the `WANDB_RUN_GROUP` env var alone won't reach a Hydra config.
 - **Tag** — short, used in `WANDB_NAME` and the script filename (`lr1e-3`, `seed42`). Default to `j<i>` or a salient `=value` from the command if the user omits one.
 
 If `N > 1` and the user hasn't said how the jobs differ, ask — don't invent ablations.

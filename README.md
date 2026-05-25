@@ -92,7 +92,7 @@ The examples below use Claude Code slash-command syntax unless a section is mark
 
 ### `/softnano:submit-wandb-job`
 
-Submit one or more wandb-logged training/finetuning jobs to the HPC scheduler. `WANDB_PROJECT` is pinned per repo (snake_case basename); `WANDB_RUN_GROUP` is asked per invocation.
+Submit one or more wandb-logged training/finetuning jobs to the HPC scheduler. `WANDB_PROJECT` is pinned per repo (snake_case basename); `WANDB_RUN_GROUP` is asked per invocation. **The training script must take the experiment/group name as a config key** (e.g. Hydra `meta.experiment_name=<group>`); the skill checks the user's command passes it.
 
 ```
 /softnano:submit-wandb-job [N] [--group <name>] [--oneoff] [--skip-commit-check]
@@ -102,8 +102,8 @@ Submit one or more wandb-logged training/finetuning jobs to the HPC scheduler. `
 1. Derives `WANDB_PROJECT` from `.env` or the repo basename (constant per repo)
 2. Picks `WANDB_RUN_GROUP`: `--oneoff` / "throwaway" → `tmp`; explicit `--group` honored; otherwise suggests existing groups (from `$JOBS_DIR/` and recent wandb run configs) and asks
 3. Asks once to commit any uncommitted changes (recommended) or bypass — pins each run to an exact SHA via `WANDB_NOTES`
-4. Collects command + short tag per job; delegates scheduler templating to `/softnano:cluster-instructions`
-5. Writes scripts into `$JOBS_DIR/<group>/`, submits via `sbatch`/`qsub`, reports IDs + log paths
+4. Collects the command + a short tag per job, and verifies the command sets the experiment/group name as a config key (so Hydra-style configs actually receive it)
+5. Delegates scheduler templating to `/softnano:cluster-instructions`, writes scripts into `$JOBS_DIR/<group>/`, submits via `sbatch`/`qsub`, reports IDs + log paths
 
 Refuses outside a git repo, never auto-commits, never `--no-verify`, never submits from a login node.
 
