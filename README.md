@@ -100,12 +100,13 @@ Submit one or more wandb-logged training/finetuning jobs to the HPC scheduler. `
 
 **What it does:**
 1. Derives `WANDB_PROJECT` from `.env` or the repo basename (constant per repo)
-2. Picks `WANDB_RUN_GROUP`: `--one-off` / "throwaway" → `tmp`; explicit `--group` honored; otherwise suggests existing groups (from `$JOBS_DIR/` and recent wandb run configs) and asks
-3. Asks once to commit any uncommitted changes (recommended) or bypass — pins each run to an exact SHA via `WANDB_NOTES`. Use `--skip-commit-check` to submit a dirty tree anyway; those runs are flagged with `(dirty)` in `WANDB_NOTES` so you can spot them later.
-4. Collects the command + a short tag per job, and verifies the command sets the experiment/group name as a config key (so Hydra-style configs actually receive it)
+2. Picks `WANDB_RUN_GROUP`: `--one-off` → `tmp`; explicit `--group` honored; otherwise suggests existing groups (from `$JOBS_DIR/<project>/*/` and recent `$LOGS_DIR/wandb/run-*/files/config.yaml`) and asks via `AskUserQuestion`
+3. Asks once to commit any uncommitted changes (recommended) or bypass — pins each run to an exact SHA via `WANDB_NOTES`. Use `--skip-commit-check` to submit a dirty tree anyway; those runs are flagged with `(dirty)` in `WANDB_NOTES`
+4. Collects the command + a short tag per job, and verifies the command passes the experiment/group name as a config key (so Hydra-style configs actually receive it)
 5. Delegates scheduler templating to `/softnano:cluster-instructions`, writes scripts into `$JOBS_DIR/<project>/<group>/`, submits via `sbatch`/`qsub`, reports IDs + log paths
+6. On mid-batch failure, asks whether to `scancel`/`qdel` the jobs that already made it into the queue
 
-Refuses outside a git repo, never auto-commits, never `--no-verify`, never submits from a login node.
+Refuses outside a git repo, prompts before proceeding on detached HEAD, never auto-commits, never `--no-verify`.
 
 ### `/softnano:monitor-jobs`
 

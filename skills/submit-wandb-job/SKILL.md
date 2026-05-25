@@ -24,29 +24,31 @@ The skill exports these env vars in the job script. **The experiment/group name 
 
 ```bash
 git rev-parse --show-toplevel    # → REPO_ROOT; bail if not a git repo
+git symbolic-ref -q HEAD         # → branch ref; empty + non-zero exit = detached
 git status --porcelain           # → DIRTY (string)
 ```
 
-Refuse on: not a git repo, or detached HEAD without explicit consent.
+Also read `.env` (walking up from `$PWD` to `$REPO_ROOT`) and capture `JOBS_DIR` and `LOGS_DIR` if defined — Step 2 and Step 5 both need them. Fall back to `$REPO_ROOT/jobs` and `$REPO_ROOT/logs` respectively if unset.
+
+Refuse on: not a git repo. On detached HEAD (Step 0's `git symbolic-ref` returned non-zero), ask once whether to proceed against the bare SHA — abort if the user says no.
 
 ## Step 1 — Project (constant)
 
-`.env: WANDB_PROJECT` if set, else snake_case of `basename $REPO_ROOT` (lowercase, `-` → `_`, strip non-`[a-z0-9_]`, collapse `_`). Show it to the user. If they override, write the override into `.env` so it stays constant next time.
+`.env: WANDB_PROJECT` if set, else snake_case of `basename $REPO_ROOT` (lowercase, `-` → `_`, strip non-`[a-z0-9_]`, collapse `_`). Show it to the user. If they override, ask whether to persist the override into `.env` (so it stays constant next time) — don't write silently.
 
 ## Step 2 — Group
 
-In order:
+If `--one-off` was passed, set `group = tmp` and skip the picker. If `--group <name>` was passed or the user named a group in the conversation, use that.
 
-1. **One-off** — if `--one-off` was passed, or the user said "one-off / throwaway / quick test / scratch / ad hoc": set `group = tmp`, no questions asked.
-2. **Explicit** — `--group <name>` or a name in the conversation: use it.
-3. **Suggest, then ask** — gather candidates from:
-   - `$JOBS_DIR/*/` directories (prior groups from this skill).
-   - Recent `LOGS_DIR/wandb/run-*/files/config.yaml` — grep `group:`, dedupe, cap at 10.
-   - A fresh slug derived from a salient piece of the user's command (only if it actually hints at one).
+Otherwise gather candidates and ask:
 
-   Present via `AskUserQuestion` with up to 3 existing groups + Other. If one is a strong semantic match for what the user is running ("another seed for the dropout sweep" + an existing `mlm_tune_dropout`), recommend it explicitly and ask whether that's where this belongs. If no candidates exist, ask freeform with a `tmp`-for-throwaway nudge.
+- `$JOBS_DIR/<project>/*/` — prior groups from this skill (skip if `JOBS_DIR` is unset).
+- `$LOGS_DIR/wandb/run-*/files/config.yaml` — grep `group:`, dedupe, cap at 10 most recent (skip if `LOGS_DIR` is unset).
+- A fresh slug from a salient piece of the user's command, only if the command actually hints at one.
 
-Validate: `[A-Za-z0-9_.-]+`, non-empty, no whitespace. `tmp` is fine — don't gate it behind a "are you sure" prompt.
+Present via `AskUserQuestion` with up to 3 existing groups + `tmp` as a first-class option + Other. If one existing group is a strong semantic match for what the user is running ("another seed for the dropout sweep" + an existing `mlm_tune_dropout`), recommend it explicitly. If there are no candidates at all, ask freeform.
+
+Validate: `[A-Za-z0-9_.-]+`, non-empty, no whitespace.
 
 ## Step 3 — Commit gate
 
@@ -67,13 +69,13 @@ Don't include untracked files unless the user says so.
 Ask for `N` if not in `$ARGUMENTS` (default 1). For each job collect:
 
 - **Command** — full invocation (user usually states it; ask if not). Skill is agnostic to Hydra/argparse/CLI shape — don't parse it, but do check that the command sets the experiment/group name as a config key (e.g. `meta.experiment_name=<group>`). If it doesn't, ask the user to add it before continuing — the `WANDB_RUN_GROUP` env var alone won't reach a Hydra config.
-- **Tag** — short, used in `WANDB_NAME` and the script filename (`lr1e-3`, `seed42`). Default to `j<i>` or a salient `=value` from the command if the user omits one.
+- **Tag** — short, used in `WANDB_NAME` and the script filename (`lr1e-3`, `seed42`). Default to `j<i>` or a salient `=value` from the command if the user omits one. Validate the same way as the group: `[A-Za-z0-9_.-]+`, non-empty, no whitespace.
 
 If `N > 1` and the user hasn't said how the jobs differ, ask — don't invent ablations.
 
 ## Step 5 — Cluster + paths
 
-Invoke `cluster-instructions` (Skill tool) for scheduler detection and templates. Don't submit from this skill directly. Pick up `JOBS_DIR` from `.env` (fall back to `$REPO_ROOT/jobs`), `mkdir -p $JOBS_DIR/<project>/<group>/logs`. The `<project>` outer level matches `monitor-jobs`' documented `$JOBS_DIR/<project>/` layout; `<group>` nests inside so related runs cluster on disk too.
+Invoke `cluster-instructions` (Skill tool) for scheduler detection and templates. Don't submit from this skill directly. `mkdir -p $JOBS_DIR/<project>/<group>/logs` (using the `JOBS_DIR` resolved in Step 0). The `<project>` outer level matches `monitor-jobs`' documented `$JOBS_DIR/<project>/` layout; `<group>` nests inside so related runs cluster on disk too.
 
 ## Step 6 — Generate scripts
 
@@ -89,11 +91,11 @@ cd "$REPO_ROOT"
 
 Logs to `logs/<group>__<tag>.out` (PBS) or `logs/<group>__<tag>_%j.out` (SLURM), relative to the submission dir — matches `monitor-jobs` expectations.
 
-Show the scripts (`cat`) and pause for confirmation if any of: `N > 3`, `commit_pinned=false`, or the command contains obviously destructive tokens (`rm `, `--force`). Otherwise just submit.
+Show the scripts (`cat`) and pause for confirmation if `N > 3` or `commit_pinned=false`. Otherwise just submit.
 
 ## Step 7 — Submit
 
-`sbatch` / `qsub` per script. On any failure, stop — don't retry, don't continue to the next job. Capture job IDs.
+`sbatch` / `qsub` per script. Capture job IDs as you go. On any failure, stop — don't retry, don't continue to the next job. If jobs *k+1..N* failed but jobs *1..k* already made it into the queue, list those job IDs and ask via `AskUserQuestion` whether to `scancel` / `qdel` them or leave them running. Don't auto-cancel; the user may want the already-submitted runs to proceed.
 
 ## Step 8 — Report
 
@@ -114,6 +116,5 @@ Repeat the dirty-submit warning at the bottom if applicable.
 
 ## Hard rules
 
-- Never auto-commit, never `--no-verify`, never edit the user's training code to fit the env contract.
-- Never submit from a login node — `cluster-instructions` enforces this; don't work around it.
-- Wandb auth is not this skill's problem — let the job fail at runtime if `WANDB_API_KEY` / `~/.netrc` is missing.
+- Never edit the user's training code to fit the env contract — if it hardcodes the project or experiment name, surface it and let the user fix it.
+- Wandb auth (`WANDB_API_KEY` / `~/.netrc`) is not this skill's problem — let the job fail at runtime if it's missing.
