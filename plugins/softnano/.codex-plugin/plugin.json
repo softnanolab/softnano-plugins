@@ -1,0 +1,31 @@
+{
+  "name": "softnano",
+  "version": "0.10.0",
+  "description": "Shared skills for the SoftNano lab — HPC job monitoring, code review, literature search, DOI lookup, and more",
+  "author": {
+    "name": "SoftNano Lab",
+    "url": "https://github.com/softnanolab"
+  },
+  "homepage": "https://github.com/softnanolab/softnano-plugins",
+  "repository": "https://github.com/softnanolab/softnano-plugins",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "SoftNano",
+    "shortDescription": "Shared lab skills for HPC, PRs, literature, and citations",
+    "longDescription": "SoftNano provides reusable skills for HPC job monitoring, cluster instructions for CX3, Isambard, MMM SLURM, and MMM SGE, code review, PR workflows, literature search through Edison, DOI-to-BibTeX lookup, and Notion image uploads.",
+    "developerName": "SoftNano Lab",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/softnanolab/softnano-plugins",
+    "defaultPrompt": [
+      "Monitor my HPC job",
+      "Open a PR for this branch",
+      "Ask Claude to review this plan"
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  }
+}

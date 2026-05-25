@@ -1,12 +1,12 @@
 # softnano-plugins
 
-Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex). Skills live in a single `skills/` directory that both CLIs read.
+Shared plugin for the SoftNano lab. Provides reusable skills for HPC job management, code review, literature search, and more — usable from either [Claude Code](https://claude.com/claude-code) or [Codex](https://developers.openai.com/codex).
 
 ## Install
 
 ### Claude Code
 
-From within a Claude Code session:
+From within a Claude Code session, add the marketplace and install the plugin:
 
 ```
 /plugin marketplace add softnanolab/softnano-plugins
@@ -33,7 +33,14 @@ Or add directly to `~/.claude/settings.json`:
 
 Invoke skills as `/softnano:<skill-name>` — e.g. `/softnano:monitor-jobs`, `/softnano:codex "review plan X"`.
 
-To test locally without installing:
+To update or remove:
+
+```
+/plugin update softnano
+/plugin remove softnano
+```
+
+To test a local checkout or branch without installing it globally, check out the branch and start Claude Code with the plugin directory:
 
 ```bash
 claude --plugin-dir /path/to/softnano-plugins
@@ -47,7 +54,7 @@ Requires Codex **0.122.0** or newer (`brew upgrade codex` / `npm install -g @ope
 codex plugin marketplace add softnanolab/softnano-plugins
 ```
 
-Then run `/plugins` inside a Codex session, select **softnano**, and install. Invoke skills with `$softnano <skill-name>` — e.g. `$softnano monitor-jobs`, `$softnano codex "review plan X"` — or pick them from the `/skills` menu.
+Then run `/plugins` inside a Codex session, select **softnano**, and install it. Invoke skills as `$softnano:<skill-name>` — e.g. `$softnano:monitor-jobs`, `$softnano:claude "review plan X"` — or pick them from the `/skills` menu.
 
 To update or remove:
 
@@ -56,14 +63,32 @@ codex plugin marketplace upgrade softnanolab-plugins
 codex plugin marketplace remove softnanolab-plugins
 ```
 
+To test a branch before it is released:
+
+```bash
+codex plugin marketplace remove softnanolab-plugins || true
+codex plugin marketplace add softnanolab/softnano-plugins --ref <branch-or-tag>
+```
+
+To test a local checkout:
+
+```bash
+codex plugin marketplace remove softnanolab-plugins || true
+codex plugin marketplace add /path/to/softnano-plugins
+```
+
 Codex-specific notes:
 
-- The same `skills/` directory is loaded by both CLIs — no duplication.
+- Claude Code reads the root plugin; Codex reads the marketplace entry at `plugins/softnano`.
+- Keep `skills/` and `plugins/softnano/skills/` synchronized with `scripts/sync-codex-skills.sh`; verify with `scripts/check-codex-skill-sync.sh` and `python3 scripts/check-codex-plugin.py`. CI runs these checks on pull requests.
+- The cross-agent helper intentionally differs: Claude Code exposes `/softnano:codex`; Codex exposes `$softnano:claude`.
 - Claude-only frontmatter fields (`argument-hint`) are silently ignored by Codex.
-- `allowed-tools`, `user-invocable`, and `disable-model-invocation` are recognised by both CLIs.
-- The plugin is named `softnano` even though the repo is `softnano-plugins`. Codex resolves the plugin name from `.codex-plugin/plugin.json`, not the directory, so a flat layout at the repo root works correctly.
+- `allowed-tools` and `user-invocable` are recognised by both CLIs. Avoid `disable-model-invocation` in Codex-packaged skills; the Codex plugin validator rejects it.
+- The plugin is named `softnano` even though the repo is `softnano-plugins`. Codex resolves the plugin name from `plugins/softnano/.codex-plugin/plugin.json`; the marketplace path must be non-empty.
 
 ## Skills
+
+The examples below use Claude Code slash-command syntax unless a section is marked Codex-only. In Codex, invoke shared skills with the same skill name but the `$softnano:<skill-name>` prefix.
 
 ### `/softnano:monitor-jobs`
 
@@ -85,23 +110,23 @@ If no job ID is given, it finds and monitors the user's active jobs.
 
 ### `/softnano:cluster-instructions`
 
-Detect which HPC cluster you are on and load the correct job submission instructions. Covers CX3 (PBS Pro) and Isambard (SLURM).
+Detect which HPC cluster you are on and load the correct job submission instructions. Covers CX3/HX1 (PBS Pro), Isambard (SLURM), new MMM Young NG (SLURM), and old MMM Young (SGE).
 
 ```
 /softnano:cluster-instructions [command-to-run]
 ```
 
 **What it does:**
-1. Detects the cluster from `pwd` and available scheduler commands
+1. Detects the cluster from host/path and available scheduler commands
 2. Checks if you are on a login node or compute node
 3. Loads cluster-specific instructions (queues, templates, storage paths)
 4. Submits the command via the correct scheduler, or reports the detected environment
 
-Includes full reference docs for CX3 (PBS Pro) and Isambard (SLURM) with job templates, queue tables, and common commands.
+Includes full reference docs for CX3/HX1 (PBS Pro), Isambard (SLURM), MMM Young NG (SLURM/A100), and MMM old Young (SGE) with job templates, queue tables, and common commands. `softnanolab-campus` is treated as a workstation/gateway host: it may expose SLURM commands, but it is not the MMM/HPC cluster target, so the skill instructs agents to SSH onward instead of treating campus-local scheduler commands as authoritative.
 
-### `/softnano:codex`
+### `/softnano:codex` (Claude Code)
 
-Get a second opinion from OpenAI Codex CLI (GPT-5.4). Cross-check reasoning, validate plans, or get an independent code review.
+Get a second opinion from OpenAI Codex CLI. Cross-check reasoning, validate plans, or get an independent code review.
 
 ```
 /softnano:codex <task or question>
@@ -113,6 +138,21 @@ Get a second opinion from OpenAI Codex CLI (GPT-5.4). Cross-check reasoning, val
 3. Runs Codex in read-only mode via `codex exec --full-auto`
 4. Reports the Codex response and notes agreements/disagreements
 5. Lets you decide how to proceed
+
+### `$softnano:claude` (Codex)
+
+Get a second opinion from Claude Code while working in Codex. Cross-check reasoning, validate plans, or get an independent code review from Claude.
+
+```
+$softnano:claude <task or question>
+```
+
+**What it does:**
+1. Reads relevant files to build context
+2. Constructs an unbiased prompt (no leading conclusions)
+3. Runs Claude in non-interactive mode via `claude -p`
+4. Uses read-only Claude tools by default (`Read`, `Grep`, `Glob`, `LS`)
+5. Reports the Claude response and notes agreements/disagreements
 
 ### `/softnano:thermo-nuclear-code-quality-review`
 
@@ -140,7 +180,7 @@ Conduct scientific literature research using Edison's autonomous search API. Edi
 
 Supports follow-up queries via `--continue-from <task_id>` to build on previous searches.
 
-**Prerequisites:** `EDISON_PLATFORM_API_KEY` in `~/.claude/settings.json` under `"env"`, and `jq` installed.
+**Prerequisites:** `EDISON_PLATFORM_API_KEY` in the agent environment, and `jq` installed. Claude Code users can set it in `~/.claude/settings.json` under `"env"`; Codex users can set it in their shell or project environment.
 
 ### `/softnano:doi2bib`
 
@@ -245,12 +285,10 @@ softnano-plugins/
 ├── .claude-plugin/
 │   ├── plugin.json          # Claude Code plugin manifest
 │   └── marketplace.json     # Claude Code marketplace manifest
-├── .codex-plugin/
-│   └── plugin.json          # Codex plugin manifest
 ├── .agents/plugins/
 │   └── marketplace.json     # Codex marketplace manifest
-├── skills/                  # Shared — both CLIs read from here
-│   ├── codex/SKILL.md
+├── skills/                  # Claude Code skill tree
+│   ├── codex/SKILL.md       # Claude Code cross-agent helper
 │   ├── monitor-jobs/SKILL.md
 │   ├── thermo-nuclear-code-quality-review/SKILL.md
 │   ├── edison/
@@ -259,13 +297,24 @@ softnano-plugins/
 │   ├── cluster-instructions/
 │   │   ├── SKILL.md
 │   │   ├── cx3.md
-│   │   └── isambard.md
+│   │   ├── isambard.md
+│   │   ├── mmm-sge.md
+│   │   └── mmm-slurm.md
 │   ├── doi2bib/SKILL.md
 │   ├── grill-me/SKILL.md
 │   ├── cleanup/SKILL.md
 │   ├── notion-upload/SKILL.md
 │   ├── open-pr/SKILL.md
 │   └── polish-pr/SKILL.md
+├── plugins/
+│   └── softnano/            # Codex plugin root referenced by marketplace.json
+│       ├── .codex-plugin/plugin.json
+│       └── skills/          # Codex skill tree; uses claude/ instead of codex/
+├── scripts/
+│   ├── check-codex-skill-sync.sh
+│   ├── check-codex-plugin.py
+│   └── sync-codex-skills.sh
+├── AGENTS.md -> CLAUDE.md
 └── .gitignore
 ```
 
@@ -282,4 +331,4 @@ allowed-tools: Bash, Read, Grep, Glob, Write
 ---
 ```
 
-Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then bump `version` in **both** `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` (keep them in sync) and push.
+Omit `argument-hint` if the skill takes no arguments (see `grill-me`). Then run `scripts/sync-codex-skills.sh`, bump `version` in `.claude-plugin/plugin.json` and `plugins/softnano/.codex-plugin/plugin.json` (keep them in sync), run `scripts/check-codex-skill-sync.sh` and `python3 scripts/check-codex-plugin.py`, and push. Keep the cross-agent helper intentionally split: root `skills/codex/` is for Claude Code, while `plugins/softnano/skills/claude/` is for Codex.

@@ -8,7 +8,7 @@ Whenever a PR adds, replaces, or meaningfully changes a skill (anything user-vis
 
 1. **Bump the version** in both plugin manifests, kept in lockstep:
    - `.claude-plugin/plugin.json`
-   - `.codex-plugin/plugin.json`
+   - `plugins/softnano/.codex-plugin/plugin.json`
 
    Use semver against the current value:
    - Patch (`0.x.y` → `0.x.(y+1)`): docs, internal refactors, bug fixes inside an existing skill.
@@ -24,3 +24,18 @@ Whenever a PR adds, replaces, or meaningfully changes a skill (anything user-vis
    The release tag must equal the version in `plugin.json` prefixed with `v` (e.g. `0.8.0` → `v0.8.0`). Auto-generated notes are the default — only hand-write notes if there is something the PR list does not convey.
 
 If you open a feature PR without the version bump, add the bump as a follow-up commit on the same branch before merging — do not let `main` drift ahead of the last release tag.
+
+## Codex skill tree sync
+
+Claude Code reads the root `skills/` tree. Codex reads `plugins/softnano/skills/` through `.agents/plugins/marketplace.json`.
+
+When editing a shared skill, run:
+
+```
+scripts/sync-codex-skills.sh
+scripts/check-codex-skill-sync.sh
+python3 scripts/check-codex-plugin.py
+```
+
+The Codex tree intentionally keeps `plugins/softnano/skills/claude/` as a Codex-only replacement for root `skills/codex/`.
+CI runs the same checks on pull requests and on pushes to `main`.

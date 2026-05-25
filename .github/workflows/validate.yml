@@ -1,0 +1,25 @@
+name: Validate plugin
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check shell scripts
+        run: |
+          bash -n scripts/check-codex-skill-sync.sh
+          bash -n scripts/sync-codex-skills.sh
+
+      - name: Check Codex skill sync
+        run: scripts/check-codex-skill-sync.sh
+
+      - name: Validate plugin metadata
+        run: python3 scripts/check-codex-plugin.py

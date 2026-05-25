@@ -1,6 +1,6 @@
 ---
 name: codex
-description: Get a second opinion from OpenAI Codex CLI (GPT-5.4). Use when you want to cross-check your reasoning, validate a plan, or get an independent review.
+description: Get a second opinion from OpenAI Codex CLI. Use when you want to cross-check your reasoning, validate a plan, or get an independent review.
 argument-hint: <task or question for Codex>
 user-invocable: true
 allowed-tools: Bash(codex *), Read, Grep, Glob
