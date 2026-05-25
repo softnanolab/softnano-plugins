@@ -90,6 +90,23 @@ Codex-specific notes:
 
 The examples below use Claude Code slash-command syntax unless a section is marked Codex-only. In Codex, invoke shared skills with the same skill name but the `$softnano:<skill-name>` prefix.
 
+### `/softnano:submit-wandb-job`
+
+Submit one or more wandb-logged training/finetuning jobs to the HPC scheduler. `WANDB_PROJECT` is pinned per repo (snake_case basename); `WANDB_RUN_GROUP` is asked per invocation.
+
+```
+/softnano:submit-wandb-job [N] [--group <name>] [--oneoff] [--skip-commit-check]
+```
+
+**What it does:**
+1. Derives `WANDB_PROJECT` from `.env` or the repo basename (constant per repo)
+2. Picks `WANDB_RUN_GROUP`: `--oneoff` / "throwaway" → `tmp`; explicit `--group` honored; otherwise suggests existing groups (from `$JOBS_DIR/` and recent wandb run configs) and asks
+3. Asks once to commit any uncommitted changes (recommended) or bypass — pins each run to an exact SHA via `WANDB_NOTES`
+4. Collects command + short tag per job; delegates scheduler templating to `/softnano:cluster-instructions`
+5. Writes scripts into `$JOBS_DIR/<group>/`, submits via `sbatch`/`qsub`, reports IDs + log paths
+
+Refuses outside a git repo, never auto-commits, never `--no-verify`, never submits from a login node.
+
 ### `/softnano:monitor-jobs`
 
 Monitor SLURM/PBS jobs and their logs. Automatically detects running/pending jobs, tails logs, and reports errors.
@@ -305,7 +322,8 @@ softnano-plugins/
 │   ├── cleanup/SKILL.md
 │   ├── notion-upload/SKILL.md
 │   ├── open-pr/SKILL.md
-│   └── polish-pr/SKILL.md
+│   ├── polish-pr/SKILL.md
+│   └── submit-wandb-job/SKILL.md
 ├── plugins/
 │   └── softnano/            # Codex plugin root referenced by marketplace.json
 │       ├── .codex-plugin/plugin.json
