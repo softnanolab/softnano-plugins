@@ -90,6 +90,24 @@ Codex-specific notes:
 
 The examples below use Claude Code slash-command syntax unless a section is marked Codex-only. In Codex, invoke shared skills with the same skill name but the `$softnano:<skill-name>` prefix.
 
+### `/softnano:submit-wandb-job`
+
+Submit one or more wandb-logged training/finetuning jobs to the HPC scheduler. `WANDB_PROJECT` is pinned per repo (snake_case basename); `WANDB_RUN_GROUP` is asked per invocation. **The training script must take the experiment/group name as a config key** (e.g. Hydra `meta.experiment_name=<group>`); the skill checks the user's command passes it.
+
+```
+/softnano:submit-wandb-job [N] [--group <name>] [--one-off] [--skip-commit-check]
+```
+
+**What it does:**
+1. Derives `WANDB_PROJECT` from `.env` or the repo basename (constant per repo)
+2. Picks `WANDB_RUN_GROUP`: `--one-off` → `tmp`; explicit `--group` honored; otherwise suggests existing groups (from `$JOBS_DIR/<project>/*/` and recent `$LOGS_DIR/wandb/run-*/files/config.yaml`) and asks via `AskUserQuestion`
+3. Asks once to commit any uncommitted changes (recommended) or bypass — pins each run to an exact SHA via `WANDB_NOTES`. Use `--skip-commit-check` to submit a dirty tree anyway; those runs are flagged with `(dirty)` in `WANDB_NOTES`
+4. Collects the command + a short tag per job, and verifies the command passes the experiment/group name as a config key (so Hydra-style configs actually receive it)
+5. Delegates scheduler templating to `/softnano:cluster-instructions`, writes scripts into `$JOBS_DIR/<project>/<group>/`, submits via `sbatch`/`qsub`, reports IDs + log paths
+6. On mid-batch failure, asks whether to `scancel`/`qdel` the jobs that already made it into the queue
+
+Refuses outside a git repo, prompts before proceeding on detached HEAD, never auto-commits, never `--no-verify`.
+
 ### `/softnano:monitor-jobs`
 
 Monitor SLURM/PBS jobs and their logs. Automatically detects running/pending jobs, tails logs, and reports errors.
@@ -305,7 +323,8 @@ softnano-plugins/
 │   ├── cleanup/SKILL.md
 │   ├── notion-upload/SKILL.md
 │   ├── open-pr/SKILL.md
-│   └── polish-pr/SKILL.md
+│   ├── polish-pr/SKILL.md
+│   └── submit-wandb-job/SKILL.md
 ├── plugins/
 │   └── softnano/            # Codex plugin root referenced by marketplace.json
 │       ├── .codex-plugin/plugin.json
