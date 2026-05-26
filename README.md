@@ -46,6 +46,8 @@ To test a local checkout or branch without installing it globally, check out the
 claude --plugin-dir /path/to/softnano-plugins
 ```
 
+This is a live source load for that Claude session. Use `/reload-plugins` after editing files in the checkout.
+
 ### Codex
 
 Requires Codex **0.122.0** or newer (`brew upgrade codex` / `npm install -g @openai/codex`).
@@ -76,6 +78,8 @@ To test a local checkout:
 codex plugin marketplace remove softnanolab-plugins || true
 codex plugin marketplace add /path/to/softnano-plugins
 ```
+
+Codex installs the local marketplace into its plugin cache. After local edits, reinstall the marketplace plugin from `/plugins` and start a new Codex session so the cached copy is refreshed.
 
 Codex-specific notes:
 
@@ -296,6 +300,12 @@ Upload local image files to a Notion page. Uses the Notion File Upload REST API 
 
 ## Reference Docs
 
+- Claude Code plugins: https://code.claude.com/docs/en/plugins
+- Claude Code plugin reference: https://code.claude.com/docs/en/plugins-reference
+- Claude Code skills: https://code.claude.com/docs/en/skills
+- Codex plugins: https://developers.openai.com/codex/plugins/build
+- Codex skills: https://developers.openai.com/codex/skills
+
 ## Project Structure
 
 ```
@@ -346,7 +356,7 @@ Create `skills/<skill-name>/SKILL.md` with frontmatter:
 name: my-skill
 description: What the skill does
 argument-hint: "<expected arguments>"
-allowed-tools: Bash, Read, Grep, Glob, Write
+allowed-tools: Bash Read Grep Glob Write
 ---
 ```
 

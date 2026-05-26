@@ -2,7 +2,7 @@
 name: monitor-jobs
 description: Monitor SLURM/PBS jobs and their logs. Use when the user asks to monitor, check, or watch a submitted job. Automatically detects running/pending jobs, tails logs, and reports errors.
 argument-hint: "[job-id (optional)]"
-allowed-tools: Bash, Read, Grep, Glob, Task
+allowed-tools: Bash Read Grep Glob Agent
 ---
 
 # Monitor HPC Jobs

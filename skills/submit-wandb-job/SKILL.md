@@ -2,7 +2,7 @@
 name: submit-wandb-job
 description: Submit one or more wandb-logged training/finetuning runs to the HPC scheduler. `WANDB_PROJECT` is fixed per repo (snake_case basename); `WANDB_RUN_GROUP` is picked per invocation. The training script must take the experiment/group name as a config key (e.g. Hydra `meta.experiment_name=<group>`); the skill passes it on the command line. The working tree is committed first so each run pins to a real SHA. Delegates SLURM/PBS templating to `cluster-instructions`. Use when the user asks to submit, queue, launch, or kick off a wandb training/finetuning job.
 argument-hint: "[N (jobs, default 1)] [--group <name>] [--one-off] [--skip-commit-check]"
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Skill, AskUserQuestion
+allowed-tools: Bash Read Grep Glob Write Edit Skill AskUserQuestion
 ---
 
 # Submit wandb Job

@@ -3,7 +3,7 @@ name: claude
 description: Get a second opinion from Claude Code. Use from Codex when you want to cross-check your reasoning, validate a plan, or get an independent review from Claude.
 argument-hint: <task or question for Claude>
 user-invocable: true
-allowed-tools: Bash(claude *), Read, Grep, Glob
+allowed-tools: Bash(claude *) Read Grep Glob
 ---
 
 # Claude Second Opinion

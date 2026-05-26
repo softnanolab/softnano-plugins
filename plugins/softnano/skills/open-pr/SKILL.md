@@ -2,7 +2,7 @@
 name: open-pr
 description: Open a GitHub pull request with a thorough auto-generated summary. Use when the user asks to open, create, or draft a PR. Fetches origin/main, mandatorily runs all pre-commit checks and pytest (off the login node on HPC), mandatorily runs /thermo-nuclear-code-quality-review against the diff, spawns 1–2 additional review subagents that deeply review the diff, and posts their findings into the PR body.
 argument-hint: "[base-branch (default: main)] [--draft]"
-allowed-tools: Bash, Read, Grep, Glob, Agent, Write, Edit
+allowed-tools: Bash Read Grep Glob Agent Write Edit
 ---
 
 # Open PR

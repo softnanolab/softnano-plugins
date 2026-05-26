@@ -2,7 +2,7 @@
 name: cluster-instructions
 description: Detect which HPC cluster you are on and load the correct job submission instructions. Use when the user asks to submit, run, or schedule a job, or when you need to know which cluster environment you are in.
 argument-hint: "[command-to-run (optional)]"
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit
+allowed-tools: Bash Read Grep Glob Write Edit
 ---
 
 # Cluster Instructions

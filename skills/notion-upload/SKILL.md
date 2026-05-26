@@ -3,7 +3,7 @@ name: notion-upload
 description: Upload local image files to a Notion page using the Notion File Upload REST API. Use when the user wants to embed local images (PNG, JPG, etc.) into a Notion page.
 argument-hint: "<notion_page_url_or_id> <file_path(s) or glob pattern>"
 user-invocable: true
-allowed-tools: Bash, Read, Glob, Grep
+allowed-tools: Bash Read Glob Grep
 ---
 
 # Notion File Upload

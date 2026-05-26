@@ -2,7 +2,7 @@
 name: polish-pr
 description: Address Codex review comments on an open PR, re-run thermo-nuclear-code-quality-review, sync with the base branch, and push the updates. Use after a Codex (or human) review has landed on a PR you opened — the skill resolves each comment in code, marks the GitHub review thread resolved, then rebases/merges any new base-branch commits before pushing.
 argument-hint: "[pr-number (default: PR for current branch)] [--base <branch>] [--no-rebase]"
-allowed-tools: Bash, Read, Grep, Glob, Agent, Write, Edit
+allowed-tools: Bash Read Grep Glob Agent Write Edit
 ---
 
 # Polish PR

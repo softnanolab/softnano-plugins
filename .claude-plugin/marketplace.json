@@ -1,5 +1,6 @@
 {
   "name": "softnanolab-plugins",
+  "description": "Shared Claude Code and Codex skills for the SoftNano lab",
   "owner": {
     "name": "SoftNano Lab"
   },

@@ -2,7 +2,7 @@
 name: cleanup
 description: After a PR has merged, tear down its worktree and feature branch. Verifies the PR is actually merged on GitHub, deletes the local + remote feature branch if they still exist, removes the git worktree, and switches the session back to the main worktree. Use when the user says they're done with a feature and want to clean up.
 argument-hint: "[pr-number (default: PR for current branch)]"
-allowed-tools: Bash, Read
+allowed-tools: Bash Read
 ---
 
 # Cleanup
