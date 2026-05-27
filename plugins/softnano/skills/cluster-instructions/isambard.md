@@ -5,6 +5,26 @@ Follow this only if you are on a SLURM Machine. You can verify this by checking 
 
 - For Isambard, this is the requirement: You must specify GPU resource in your batch script using either --gpus or one of the --gpus-per-* options. Each GPU requested will also allocate 72 CPU cores and 115 GB of Grace RAM, i.e. one Grace Hopper Superchip. Any job will by default use a unit of one Grace Hopper Superchip. 1 node has 4 GPUs.
 
+## Storage layout — $HOME has a 100 GB quota
+
+The home directory on Isambard is capped at **100 GB**. Anything that is not source code (datasets, model weights, checkpoints, wandb run dirs, large outputs, HuggingFace caches, etc.) must live under `$PROJECTDIR` instead — that is the shared project space with the real capacity. Keep `$HOME` for the repo checkout, dotfiles, and the venv only.
+
+Concretely:
+- Put data / checkpoints / outputs under `$PROJECTDIR/<project>/...` and reference them from configs via `$PROJECTDIR`.
+- Point caches at the project space too: e.g. `export HF_HOME=$PROJECTDIR/.cache/huggingface`, `export WANDB_DIR=$PROJECTDIR/<project>/wandb`.
+- Before submitting, sanity-check with `quota -s` (or `du -sh ~ 2>/dev/null`) — a job that fills $HOME mid-run will fail with cryptic write errors.
+
+## Worktrees share the main checkout's `.venv`
+
+When working across multiple Claude worktrees in `.claude/worktrees/<name>/`, **do not** run `uv sync` inside each worktree — that would create a separate `.venv/` per worktree and quickly burn through the $HOME quota. Instead, symlink the main worktree's `.venv` into each new worktree once at creation time:
+
+```bash
+# From inside the new worktree (one-time):
+ln -s <main-worktree-path>/.venv .venv
+```
+
+Run `uv sync --frozen --extra dev` only in the main worktree; all sibling worktrees see the update through the symlink. The job templates below still reference `.venv/bin/python` — that resolves through the symlink to the shared interpreter.
+
 ## Single-GPU Job Template
 
 ```bash

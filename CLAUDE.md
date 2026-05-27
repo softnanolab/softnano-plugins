@@ -4,16 +4,17 @@ Shared Claude Code / Codex skills for the SoftNano lab.
 
 ## Release workflow — required for every new feature
 
-Whenever a PR adds, replaces, or meaningfully changes a skill (anything user-visible — new skill, new behavior, breaking change to an existing skill), it MUST also:
+Whenever a PR adds, replaces, or meaningfully changes a skill (anything user-visible — new skill, new behavior, polish to an existing skill, breaking change), it MUST also:
 
 1. **Bump the version** in both plugin manifests, kept in lockstep:
    - `.claude-plugin/plugin.json`
    - `plugins/softnano/.codex-plugin/plugin.json`
 
-   Use semver against the current value:
-   - Patch (`0.x.y` → `0.x.(y+1)`): docs, internal refactors, bug fixes inside an existing skill.
-   - Minor (`0.x.y` → `0.(x+1).0`): new skill, new user-facing capability, or replacement of an existing skill.
-   - Major (`x.y.z` → `(x+1).0.0`): breaking change to skill names, invocation, or expected inputs.
+   Bump rule against the current value `X.Y.Z`. The third component is always `0` — it is never incremented.
+   - **Polish to an existing skill** (docs, behavior tweaks, bug fixes, internal refactors, new user-facing capability inside an existing skill): bump the middle component → `X.Y.0` → `X.(Y+1).0`. Example: `1.0.0` → `1.1.0`.
+   - **New skill added** (a new skill directory shipped under `skills/`): bump the leading component and reset the middle to `0` → `X.Y.0` → `(X+1).0.0`. Example: `1.3.0` → `2.0.0`.
+
+   Either kind of bump REQUIRES a matching GitHub release (see step 2). There is no "skip the release" path — if you bumped the version, you must tag it.
 
 2. **Cut a GitHub release** matching the new version once the PR is merged to `main`:
 
