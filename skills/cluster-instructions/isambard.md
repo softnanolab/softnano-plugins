@@ -12,7 +12,7 @@ The home directory on Isambard is capped at **100 GB**. Anything that is not sou
 Concretely:
 - Put data / checkpoints / outputs under `$PROJECTDIR/<project>/...` and reference them from configs via `$PROJECTDIR`.
 - Point caches at the project space too: e.g. `export HF_HOME=$PROJECTDIR/.cache/huggingface`, `export WANDB_DIR=$PROJECTDIR/<project>/wandb`.
-- Before submitting, sanity-check usage with `quota -s` (or `lfs quota -h -u $USER $HOME` for Lustre detail) — a job that fills $HOME mid-run will fail with cryptic write errors.
+- Before submitting, sanity-check usage with `quota -s` (works on any quota'd filesystem; on Lustre mounts you can also use `lfs quota -h -u $USER <lustre-mountpoint>`) — a job that fills $HOME mid-run will fail with cryptic write errors.
 
 ## One venv per project, hosted on `$PROJECTDIR`
 
@@ -22,8 +22,8 @@ One-time setup in the main checkout:
 
 ```bash
 mkdir -p $PROJECTDIR/<project>
-rm -rf .venv 2>/dev/null                       # remove any stray local venv first
-ln -sfn $PROJECTDIR/<project>/.venv .venv      # idempotent: -f overwrites, -n won't recurse into a dir
+rm -rf .venv                                   # remove any stray local venv first; safe if it doesn't exist
+ln -sfn $PROJECTDIR/<project>/.venv .venv      # idempotent: -f overwrites, -n replaces an existing symlink-to-dir instead of nesting inside it
 uv sync --frozen --extra dev                   # creates the venv at $PROJECTDIR/<project>/.venv
 ```
 
@@ -31,7 +31,7 @@ For each new Claude worktree, repeat **only** the symlink step (do not re-run `u
 
 ```bash
 # From inside the new worktree:
-rm -rf .venv 2>/dev/null
+rm -rf .venv
 ln -sfn $PROJECTDIR/<project>/.venv .venv
 ```
 

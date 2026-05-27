@@ -10,15 +10,13 @@ Whenever a PR adds, replaces, or meaningfully changes a skill (anything user-vis
    - `.claude-plugin/plugin.json`
    - `plugins/softnano/.codex-plugin/plugin.json`
 
-   Bump rule against the current value `X.Y.Z`. The third component is always `0` — it is never incremented.
+   Bump rule against the current value `X.Y.Z`. The third component is always `0` — it is never incremented. (This rule governs releases from `1.x` onward; pre-`1.x` tags like `v0.9.1` and `v0.11.1` predate it and are not retroactively invalid.)
    - **Polish to an existing skill** (docs, behavior tweaks, bug fixes, internal refactors, new user-facing capability inside an existing skill): bump the middle component → `X.Y.0` → `X.(Y+1).0`. Example: `1.0.0` → `1.1.0`.
    - **New skill added** (a new skill directory shipped under `skills/`): bump the leading component and reset the middle to `0` → `X.Y.0` → `(X+1).0.0`. Example: `1.3.0` → `2.0.0`.
 
    This is intentional: there is no patch slot, so urgent bug fixes ride the next polish bump along with whatever else is in the PR. If you find yourself wanting a third-component bump, ship it as a polish (`Y+1`) instead.
 
-   Either kind of bump REQUIRES a matching GitHub release (see step 2). There is no "skip the release" path — if you bumped the version, you must tag it.
-
-   Note: the versioning baseline was reset to `1.0.0` in the PR that introduced this rule, so the release history shows `0.11.x → 1.1.0` with no intermediate `v1.0.0` tag. That gap is deliberate, not a missing release.
+   Every bump from `1.x` onward REQUIRES a matching GitHub release (see step 2). The one exception is the one-time baseline reset: the PR that introduces this rule bumps `plugin.json` directly from `0.11.1` to `1.1.0` without ever passing through a committed `1.0.0`, so no `v1.0.0` release is cut. That gap is deliberate, not a missing release. Every subsequent version must be tagged.
 
 2. **Cut a GitHub release** matching the new version once the PR is merged to `main`:
 
