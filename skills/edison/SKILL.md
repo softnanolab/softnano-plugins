@@ -55,20 +55,41 @@ fi
 if [ -z "${EDISON_SCRIPT:-}" ] || [ ! -x "$EDISON_SCRIPT" ]; then
     echo '{"error": "Could not locate executable edison_query.sh in the installed SoftNano skill."}'
 else
-    "$EDISON_SCRIPT" --query "<the research question>"
+    "$EDISON_SCRIPT" --query "<the research question>" --max-wait 540
 fi
 ```
 
-The script authenticates, submits the query, and polls every 15s until Edison returns an answer (up to 10 minutes). Progress messages appear on stderr. The final result is a JSON object on stdout:
+The script authenticates, submits the query, and polls every 15s until Edison returns an answer. Progress messages appear on stderr. The final result is a JSON object on stdout:
 
 ```json
 {
   "task_id": "uuid",
+  "status": "success",
   "formatted_answer": "The full cited answer in markdown",
   "answer": "Plain text answer",
   "has_successful_answer": true
 }
 ```
+
+If the local wait limit is reached before Edison finishes, the task is still running on Edison's servers. The script returns a resumable, non-fatal JSON object:
+
+```json
+{
+  "task_id": "uuid",
+  "status": "running",
+  "recoverable": true,
+  "has_successful_answer": false,
+  "resume_command": "/path/to/edison_query.sh --task-id uuid"
+}
+```
+
+In this case, do **not** answer from memory or search other sources. Poll the same task id again:
+
+```bash
+"$EDISON_SCRIPT" --task-id <task_id> --max-wait 540
+```
+
+Repeat polling until `status` is `success` or Edison returns a terminal failure. If the shell tool itself times out but the last visible output contains a `task_id`, recover using `--task-id <task_id>`.
 
 If the script outputs an `error` field, report the error to the user and stop.
 
@@ -104,7 +125,7 @@ fi
 if [ -z "${EDISON_SCRIPT:-}" ] || [ ! -x "$EDISON_SCRIPT" ]; then
     echo '{"error": "Could not locate executable edison_query.sh in the installed SoftNano skill."}'
 else
-    "$EDISON_SCRIPT" --query "<follow-up question>" --continue-from <task_id>
+    "$EDISON_SCRIPT" --query "<follow-up question>" --continue-from <task_id> --max-wait 540
 fi
 ```
 
