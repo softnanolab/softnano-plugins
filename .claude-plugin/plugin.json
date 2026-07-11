@@ -1,7 +1,7 @@
 {
   "name": "softnano",
   "description": "Shared skills for the SoftNano lab — HPC job monitoring, code review, literature search, DOI lookup, and more",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "author": {
     "name": "SoftNanoLab",
     "url": "https://github.com/softnanolab"
