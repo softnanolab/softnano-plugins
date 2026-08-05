@@ -278,6 +278,27 @@ Post-merge teardown for a feature branch and its worktree.
 
 Refuses to delete `main`, refuses to operate on a dirty worktree without confirmation, and refuses to force-delete a branch without a verified-merged PR backing it.
 
+### `/softnano:handoff`
+
+Hand an in-progress task from one cluster to another. Writes a `HANDOFF.md` addressed to the Claude agent on the receiving cluster, commits the WIP, and pushes a branch; the agent on the other side resumes from it.
+
+```
+/softnano:handoff [cx3|hx1|mmm|mmm-old|isambard] [notes]
+/softnano:handoff resume [branch-or-path]
+```
+
+**What it does (create):**
+1. Detects the source cluster via `/softnano:cluster-instructions` and reads the *target's* module/venv recipe
+2. Gathers state from commands, not memory — git diff/log, `squeue`/`qstat`, W&B run IDs, `du -sh $DATA_DIR/*`, checkpoint sizes, redacted `.env` keys
+3. Decides what travels: code via git, datasets rebuilt rather than copied where a build script exists, only the checkpoints actually needed
+4. Records live source-cluster jobs with an explicit action per job, so the receiving agent cannot start duplicate runs
+5. Writes `HANDOFF.md` from the skill's template — objective, next action, env var mapping, transfer commands, verification checklist, traps, open questions
+6. Commits the WIP onto `handoff/<slug>` and pushes; prints the two commands to run on the target
+
+**What it does (resume):** locates the handoff, reads it before touching anything, runs the verification checklist and reports pass/fail per item, rebuilds job scripts from the *target's* scheduler template, starts a new W&B run by default rather than resuming one that may still be live, then continues the work and deletes `HANDOFF.md` in the first real commit.
+
+Never writes secrets into the document, never pushes `main` or force-pushes, never kills or relaunches source-cluster jobs on its own, and marks any unverified claim `UNVERIFIED` rather than asserting it.
+
 ### `/softnano:notion-upload`
 
 Upload local image files to a Notion page. Uses the Notion File Upload REST API to embed PNGs, JPGs, and other images directly into a page.
@@ -320,6 +341,9 @@ softnano-plugins/
 │   │   └── mmm-slurm.md
 │   ├── doi2bib/SKILL.md
 │   ├── grill-me/SKILL.md
+│   ├── handoff/
+│   │   ├── SKILL.md
+│   │   └── handoff-template.md
 │   ├── cleanup/SKILL.md
 │   ├── notion-upload/SKILL.md
 │   ├── open-pr/SKILL.md
